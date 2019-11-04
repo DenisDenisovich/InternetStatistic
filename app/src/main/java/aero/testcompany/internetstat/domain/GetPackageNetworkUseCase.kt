@@ -1,5 +1,7 @@
-package aero.testcompany.internetstat.util
+package aero.testcompany.internetstat.domain
 
+import aero.testcompany.internetstat.models.NetworkPeriod
+import aero.testcompany.internetstat.util.getFullDate
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.usage.NetworkStats
@@ -9,29 +11,26 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
-import java.text.SimpleDateFormat
 import java.util.*
 
 @TargetApi(Build.VERSION_CODES.M)
-class PackageNetworkInfo(
+class GetPackageNetworkUseCase(
     private val context: Context,
     private val networkStatsManager: NetworkStatsManager,
     private val packageUid: Int
 ) {
+    private lateinit var getTimeLineUseCase: GetTimeLineUseCase
 
-    private val df = SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z")
-    fun getInfo(interval: Long, step: Long): Pair<List<Long>, List<Long>> {
+    fun getInfo(interval: Long, period: NetworkPeriod): Pair<List<Long>, List<Long>> {
         val receiverList = arrayListOf<Long>()
         val transmittedList = arrayListOf<Long>()
-        val cal = Calendar.getInstance()
-        var startTime = System.currentTimeMillis() - interval
-        cal.timeInMillis = startTime
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        startTime = cal.timeInMillis
-        var endTime = startTime + step
-        for (i in 0 .. interval / step) {
+        getTimeLineUseCase = GetTimeLineUseCase(interval, period)
+        val timeLine = getTimeLineUseCase.getTimeLine()
+        var startTime: Long
+        var endTime: Long
+        for (timeIndex in 0 until timeLine.lastIndex) {
+            startTime = timeLine[timeIndex]
+            endTime = timeLine[timeIndex + 1]
             val networkStatsMobile: NetworkStats? = try {
                 networkStatsManager.queryDetailsForUid(
                     ConnectivityManager.TYPE_MOBILE,
@@ -61,24 +60,18 @@ class PackageNetworkInfo(
                 networkStatsMobile.getNextBucket(bucketMobile)
                 rxBytes += bucketMobile.rxBytes
                 txBytes += bucketMobile.txBytes
-                Log.d("LogTime", "Modile start: ${df.format(bucketMobile.startTimeStamp)}, end: ${df.format(bucketMobile.endTimeStamp)}, rx: ${bucketMobile.rxBytes}, tx: ${bucketMobile.txBytes}")
+                log("Mobile", bucketMobile)
             }
             val bucketWifi = NetworkStats.Bucket()
             while (networkStatsWifi!!.hasNextBucket()) {
                 networkStatsWifi.getNextBucket(bucketWifi)
                 rxBytes += bucketWifi.rxBytes
                 txBytes += bucketWifi.txBytes
-                Log.d("LogTime", "WIFI start: ${df.format(bucketWifi.startTimeStamp)}, end: ${df.format(bucketWifi.endTimeStamp)}, rx: ${bucketWifi.rxBytes}, tx: ${bucketWifi.txBytes}")
+                log("WIFI", bucketWifi)
             }
-
             receiverList.add(rxBytes)
             transmittedList.add(txBytes)
-            networkStatsMobile.close()
-            networkStatsWifi.close()
-            startTime += step
-            endTime += step
         }
-
         return Pair(receiverList, transmittedList)
     }
 
@@ -89,5 +82,15 @@ class PackageNetworkInfo(
             return tm.subscriberId
         }
         return ""
+    }
+
+    private fun log(description: String, bucket: NetworkStats.Bucket) {
+        Log.d(
+            "LogTime",
+            "$description start: " + "${bucket.startTimeStamp.getFullDate()}, " +
+                "end: ${bucket.endTimeStamp.getFullDate()}, " +
+                "rx: ${bucket.rxBytes}, " +
+                "tx: ${bucket.txBytes}"
+        )
     }
 }

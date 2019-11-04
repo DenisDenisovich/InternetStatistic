@@ -1,13 +1,12 @@
-package aero.testcompany.internetstat
+package aero.testcompany.internetstat.view
 
-import aero.testcompany.internetstat.applist.ApplicationListFragment
+import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.MyPackageInfo
-import aero.testcompany.internetstat.models.NetworkInfo
+import aero.testcompany.internetstat.view.applist.AppListFragment
 import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.AppOpsManager
-import android.app.usage.NetworkStatsManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.content.Context
@@ -19,8 +18,6 @@ import androidx.core.app.ActivityCompat
 
 class MainActivity : AppCompatActivity() {
 
-    val READ_PHONE_STATE_REQUEST = 37
-    @SuppressLint("WrongConstant")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -37,23 +34,46 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun startAppList() {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        when (requestCode) {
+            READ_PHONE_STATE_REQUEST -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startAppList()
+                }
+                return
+            }
+        }
+    }
+
+    override fun onBackPressed() {
+        if (supportFragmentManager.backStackEntryCount == 1) {
+            finish()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    private fun startAppList() {
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.container, ApplicationListFragment())
+            replace(R.id.container, AppListFragment())
             addToBackStack(null)
             commit()
         }
     }
+
 
     fun startAppInfo(info: MyPackageInfo) {
         supportFragmentManager.beginTransaction().apply {
-            replace(R.id.container, ApplicationInfoFragment.getInstance(info))
+            replace(R.id.container, AppInfoFragment.getInstance(info))
             addToBackStack(null)
             commit()
         }
     }
 
-
+    @Suppress("DEPRECATED_IDENTITY_EQUALS")
     private fun hasPermissionToReadPhoneStats(): Boolean {
         return ActivityCompat.checkSelfPermission(
             this,
@@ -62,7 +82,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestPhoneStateStats() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_PHONE_STATE), READ_PHONE_STATE_REQUEST)
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_PHONE_STATE), READ_PHONE_STATE_REQUEST
+        )
     }
 
     private fun hasPermissionToReadNetworkHistory(): Boolean {
@@ -100,25 +123,7 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
-    ) {
-        when (requestCode) {
-            READ_PHONE_STATE_REQUEST -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startAppList()
-                }
-                return
-            }
-        }
-    }
-
-    override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount == 1) {
-            finish()
-        } else {
-            super.onBackPressed()
-        }
+    companion object {
+        const val READ_PHONE_STATE_REQUEST = 37
     }
 }

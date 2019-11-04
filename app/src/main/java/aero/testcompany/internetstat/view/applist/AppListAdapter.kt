@@ -1,10 +1,9 @@
-package aero.testcompany.internetstat.applist
+package aero.testcompany.internetstat.view.applist
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.MyPackageInfo
-import aero.testcompany.internetstat.models.NetworkInfo
-import aero.testcompany.internetstat.util.toMb
 import android.annotation.SuppressLint
+import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,8 +11,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_package_info.view.*
+import kotlinx.coroutines.*
 
-class ApplicationListAdapter: RecyclerView.Adapter<ApplicationListAdapter.ApplicationViewHolder>() {
+class AppListAdapter : RecyclerView.Adapter<AppListAdapter.ApplicationViewHolder>() {
 
     var items: ArrayList<MyPackageInfo> = arrayListOf()
     var onItemClicked: ((packageInfo: MyPackageInfo) -> Unit)? = null
@@ -39,13 +39,27 @@ class ApplicationListAdapter: RecyclerView.Adapter<ApplicationListAdapter.Applic
         var label: TextView = view.tv_name,
         var packageName: TextView = view.tv_package,
         var icon: ImageView = view.iv_icon
-        ): RecyclerView.ViewHolder(view) {
+    ) : RecyclerView.ViewHolder(view) {
+
+        private var imageJob = Job()
+        private var uiScope = CoroutineScope(Dispatchers.Main + imageJob)
+        private var imageOperation: Deferred<Drawable>? = null
 
         @SuppressLint("SetTextI18n")
-        fun bind(networkInfo: MyPackageInfo) {
-            icon.setImageDrawable(itemView.context.packageManager.getApplicationIcon(networkInfo.packageName))
-            label.text = networkInfo.name
-            packageName.text = networkInfo.packageName
+        fun bind(packageInfo: MyPackageInfo) {
+            uiScope.launch {
+                if (imageOperation?.isActive == true) {
+                    imageOperation?.cancelAndJoin()
+                }
+                icon.setImageResource(android.R.color.transparent)
+                imageOperation = async(Dispatchers.Default) {
+                    itemView.context.packageManager.getApplicationIcon(packageInfo.packageName)
+                }
+                val drawable = imageOperation?.await()
+                icon.setImageDrawable(drawable)
+            }
+            label.text = packageInfo.name
+            packageName.text = packageInfo.packageName
         }
     }
 }
