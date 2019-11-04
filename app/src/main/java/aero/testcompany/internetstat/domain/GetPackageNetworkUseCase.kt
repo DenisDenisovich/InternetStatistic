@@ -40,6 +40,7 @@ class GetPackageNetworkUseCase(
                     packageUid
                 )
             } catch (e: Exception) {
+                e.printStackTrace()
                 null
             }
             val networkStatsWifi: NetworkStats? = try {
@@ -51,23 +52,28 @@ class GetPackageNetworkUseCase(
                     packageUid
                 )
             } catch (e: Exception) {
+                e.printStackTrace()
                 null
             }
             var rxBytes = 0L
             var txBytes = 0L
             val bucketMobile = NetworkStats.Bucket()
-            while (networkStatsMobile!!.hasNextBucket()) {
-                networkStatsMobile.getNextBucket(bucketMobile)
-                rxBytes += bucketMobile.rxBytes
-                txBytes += bucketMobile.txBytes
-                log("Mobile", bucketMobile)
+            networkStatsMobile?.let {
+                while (networkStatsMobile.hasNextBucket()) {
+                    networkStatsMobile.getNextBucket(bucketMobile)
+                    rxBytes += bucketMobile.rxBytes
+                    txBytes += bucketMobile.txBytes
+                    log("Mobile", bucketMobile)
+                }
             }
             val bucketWifi = NetworkStats.Bucket()
-            while (networkStatsWifi!!.hasNextBucket()) {
-                networkStatsWifi.getNextBucket(bucketWifi)
-                rxBytes += bucketWifi.rxBytes
-                txBytes += bucketWifi.txBytes
-                log("WIFI", bucketWifi)
+            networkStatsWifi?.let {
+                while (networkStatsWifi.hasNextBucket()) {
+                    networkStatsWifi.getNextBucket(bucketWifi)
+                    rxBytes += bucketWifi.rxBytes
+                    txBytes += bucketWifi.txBytes
+                    log("WIFI", bucketWifi)
+                }
             }
             receiverList.add(rxBytes)
             transmittedList.add(txBytes)

@@ -2,9 +2,9 @@ package aero.testcompany.internetstat.view
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.MyPackageInfo
-import aero.testcompany.internetstat.view.applist.AppListFragment
+import aero.testcompany.internetstat.view.fragments.AppInfoFragment
+import aero.testcompany.internetstat.view.fragments.applist.AppListFragment
 import android.Manifest
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.AppOpsManager
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +14,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.view.FrameMetrics
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.FragmentManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         if (hasPermissionToReadNetworkHistory()) {
             if (!hasPermissionToReadPhoneStats()) {
                 requestPhoneStateStats()
-            } else {
+            } else if (supportFragmentManager.backStackEntryCount == 0) {
                 startAppList()
             }
         }
@@ -41,6 +43,10 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             READ_PHONE_STATE_REQUEST -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    supportFragmentManager.popBackStack(
+                        null,
+                        FragmentManager.POP_BACK_STACK_INCLUSIVE
+                    )
                     startAppList()
                 }
                 return

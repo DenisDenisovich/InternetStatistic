@@ -1,4 +1,4 @@
-package aero.testcompany.internetstat.view.applist
+package aero.testcompany.internetstat.view.fragments.applist
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.MyPackageInfo

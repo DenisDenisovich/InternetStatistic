@@ -1,9 +1,7 @@
-package aero.testcompany.internetstat.view
+package aero.testcompany.internetstat.view.fragments
 
 import aero.testcompany.internetstat.R
-import aero.testcompany.internetstat.domain.GetPackageUidUseCase
 import aero.testcompany.internetstat.models.NetworkInfo
-import aero.testcompany.internetstat.domain.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -11,8 +9,6 @@ import aero.testcompany.internetstat.util.gone
 import aero.testcompany.internetstat.util.toMb
 import aero.testcompany.internetstat.util.visible
 import aero.testcompany.internetstat.viewmodel.AppInfoViewModel
-import android.app.usage.NetworkStatsManager
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,7 +22,6 @@ import android.graphics.Color
 import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
 import androidx.lifecycle.ViewModelProviders
-import androidx.lifecycle.observe
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import java.text.SimpleDateFormat
