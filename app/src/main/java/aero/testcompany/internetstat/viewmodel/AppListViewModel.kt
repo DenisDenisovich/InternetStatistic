@@ -1,6 +1,6 @@
 package aero.testcompany.internetstat.viewmodel
 
-import aero.testcompany.internetstat.domain.GetPackagesUseCase
+import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import android.content.pm.PackageManager
 import androidx.lifecycle.*
@@ -13,7 +13,8 @@ class AppListViewModel : ViewModel() {
         set(value) {
             field = value
             value?.let {
-                getPackagesUseCase = GetPackagesUseCase(value)
+                getPackagesUseCase =
+                    GetPackagesUseCase(value)
             }
         }
     val installedPackages: MutableLiveData<List<MyPackageInfo>> by lazy {

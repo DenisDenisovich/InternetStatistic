@@ -1,7 +1,7 @@
 package aero.testcompany.internetstat.viewmodel
 
-import aero.testcompany.internetstat.domain.GetPackageUidUseCase
-import aero.testcompany.internetstat.domain.GetPackageNetworkUseCase
+import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
+import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkInfo
@@ -30,9 +30,15 @@ class AppInfoViewModel : ViewModel() {
         this.myPackageInfo = myPackageInfo
         networkStatsManager =
             context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
-        getPackageUidUseCase = GetPackageUidUseCase(context)
+        getPackageUidUseCase =
+            GetPackageUidUseCase(context)
         val uid = getPackageUidUseCase.getUid(myPackageInfo.packageName)
-        packageNetworkUseCase = GetPackageNetworkUseCase(context, networkStatsManager, uid)
+        packageNetworkUseCase =
+            GetPackageNetworkUseCase(
+                context,
+                networkStatsManager,
+                uid
+            )
     }
 
     fun update(interval: Long, period: NetworkPeriod) {

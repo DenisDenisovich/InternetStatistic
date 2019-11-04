@@ -1,4 +1,4 @@
-package aero.testcompany.internetstat.domain
+package aero.testcompany.internetstat.domain.packageinfo
 
 import android.content.Context
 import android.content.pm.PackageManager
