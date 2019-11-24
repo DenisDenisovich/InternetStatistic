@@ -39,6 +39,9 @@ class AppInfoFragment : Fragment() {
     private lateinit var viewModel: AppInfoViewModel
     private val interval = 1000L * 60 * 60 * 24 * 31
     private val period = NetworkPeriod.DAY
+    private val lines = arrayListOf<NetworkLine>()
+    val lineData = LineData()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -76,52 +79,29 @@ class AppInfoFragment : Fragment() {
         tv_name.text = myPackageInfo.name
         tv_package.text = myPackageInfo.packageName
         viewModel.update(interval, period)
+/*
+        spinner_received_sources.setOnItemClickListener { parent, view, position, id ->
+            when(position) {
+            }
+        }
+*/
     }
 
     private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
         chart.setTouchEnabled(true)
         chart.setPinchZoom(true)
-        val lineData = LineData()
         // add all state
-        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.ALL, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.ALL))
-            }
-        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.ALL))
-            }
-        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.ALL, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.ALL))
-            }
+        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
         // add foreground state
-        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.FOREGROUND))
-            }
-        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.FOREGROUND))
-            }
-        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.FOREGROUND))
-            }
+        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
         // add background state
-        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.BACKGROUND))
-            }
-        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.BACKGROUND))
-            }
-        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
-            ?.let { data ->
-                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.BACKGROUND))
-            }
-
+        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
+        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
         chart.apply {
             data = lineData
             xAxis.apply {
@@ -147,17 +127,17 @@ class AppInfoFragment : Fragment() {
         for (index in values.indices) {
             lineValues.add(Entry(index.toFloat(), values[index].toMb().toFloat()))
         }
-        val graphColor = when(state) {
+        val graphColor = when (state) {
             ApplicationState.ALL -> R.color.colorAll
             ApplicationState.FOREGROUND -> R.color.colorForeground
             ApplicationState.BACKGROUND -> R.color.colorBackground
         }
-        val graphLine = when(source) {
+        val graphLine = when (source) {
             NetworkSource.ALL -> null
             NetworkSource.WIFI -> Triple(2F, 2F, 0F)
             NetworkSource.MOBILE -> Triple(10F, 5F, 0F)
         }
-        val graphDrawable = when(state) {
+        val graphDrawable = when (state) {
             ApplicationState.ALL -> R.drawable.fade_all
             ApplicationState.FOREGROUND -> R.drawable.fade_foreground
             ApplicationState.BACKGROUND -> R.drawable.fade_background
@@ -188,6 +168,20 @@ class AppInfoFragment : Fragment() {
         }
     }
 
+    private fun LineData.addDataSet(
+        data: List<BucketInfo>,
+        source: NetworkSource,
+        state: ApplicationState,
+        bytesType: BytesType
+    ) {
+        data.getNetworkData(source, state, bytesType)
+            ?.let { networkData ->
+                val dataSet = getDataSet(networkData, source, state)
+                lines.add(NetworkLine(dataSet, source, state, bytesType))
+                addDataSet(dataSet)
+            }
+    }
+
     companion object {
         private const val INFO_KEY = "key"
         fun getInstance(packageInfo: MyPackageInfo): AppInfoFragment =
@@ -197,6 +191,13 @@ class AppInfoFragment : Fragment() {
                 }
             }
     }
+
+    class NetworkLine(
+        val line: LineDataSet,
+        val source: NetworkSource,
+        val state: ApplicationState,
+        val bytesType: BytesType
+    )
 }
 
 

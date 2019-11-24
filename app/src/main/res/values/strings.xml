@@ -3,4 +3,16 @@
     <string name="installed_applications">Installed Applications</string>
     <string name="total_received">Received %s Mb</string>
     <string name="total_transmitted">Transmitted %s Mb</string>
+
+    <string-array name="sources">
+        <item>All</item>
+        <item>Mobile</item>
+        <item>Wifi</item>
+    </string-array>
+
+    <string-array name="states">
+        <item>All</item>
+        <item>Foreground</item>
+        <item>Background</item>
+    </string-array>
 </resources>

@@ -6,6 +6,14 @@
         android:layout_height="match_parent"
         android:padding="16dp">
 
+    <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_chart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="tv_received,tv_transmitted,chart_received,chart_transmitted,spinner_received_sources,spinner_received_states,spinner_transmitted_sources,spinner_transmitted_states"
+            tools:visibility="visible" />
+
     <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/iv_icon"
             android:layout_width="56dp"
@@ -32,8 +40,8 @@
             android:layout_marginStart="16dp"
             android:textColor="#000000"
             android:textSize="16sp"
-            app:layout_constraintStart_toEndOf="@id/iv_icon"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_icon"
             app:layout_constraintTop_toBottomOf="@id/tv_name"
             tools:text="app.android.application" />
 
@@ -41,7 +49,7 @@
             android:id="@+id/tv_received"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:text="Received"
             android:textColor="#000000"
             android:textSize="16sp"
@@ -50,13 +58,27 @@
             app:layout_constraintTop_toBottomOf="@id/iv_icon"
             tools:ignore="HardcodedText" />
 
-    <androidx.constraintlayout.widget.Group
-            android:id="@+id/group_chart"
+    <Spinner
+            android:id="@+id/spinner_received_sources"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            tools:visibility="visible"
-            app:constraint_referenced_ids="tv_received,tv_transmitted,chart_received,chart_transmitted" />
+            android:layout_marginTop="8dp"
+            android:entries="@array/sources"
+            app:layout_constraintBottom_toTopOf="@id/chart_received"
+            app:layout_constraintEnd_toStartOf="@id/spinner_received_states"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_received" />
+
+    <Spinner
+            android:id="@+id/spinner_received_states"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/states"
+            app:layout_constraintBottom_toBottomOf="@id/spinner_received_sources"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/spinner_received_sources"
+            app:layout_constraintTop_toTopOf="@id/spinner_received_sources" />
+
 
     <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart_received"
@@ -65,20 +87,41 @@
             app:layout_constraintBottom_toTopOf="@id/tv_transmitted"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_received" />
+            app:layout_constraintTop_toBottomOf="@id/spinner_received_sources" />
 
     <TextView
             android:id="@+id/tv_transmitted"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:text="Transmitted"
             android:textColor="#000000"
             android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@id/chart_transmitted"
+            app:layout_constraintBottom_toTopOf="@id/spinner_transmitted_sources"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/chart_received"
             tools:ignore="HardcodedText" />
+
+    <Spinner
+            android:id="@+id/spinner_transmitted_sources"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:entries="@array/sources"
+            app:layout_constraintBottom_toTopOf="@id/chart_transmitted"
+            app:layout_constraintEnd_toStartOf="@id/spinner_transmitted_states"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_transmitted" />
+
+    <Spinner
+            android:id="@+id/spinner_transmitted_states"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/states"
+            app:layout_constraintBottom_toBottomOf="@id/spinner_transmitted_sources"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/spinner_transmitted_sources"
+            app:layout_constraintTop_toTopOf="@id/spinner_transmitted_sources" />
 
     <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart_transmitted"
@@ -87,7 +130,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_transmitted" />
+            app:layout_constraintTop_toBottomOf="@id/spinner_transmitted_sources" />
 
     <ProgressBar
             android:id="@+id/progress"
