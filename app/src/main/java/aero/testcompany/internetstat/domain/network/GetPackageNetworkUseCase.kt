@@ -15,7 +15,7 @@ import android.util.Log
 
 @TargetApi(Build.VERSION_CODES.M)
 open class GetPackageNetworkUseCase(
-    public val packageUid: Int,
+    val packageUid: Int,
     protected val context: Context,
     protected val networkStatsManager: NetworkStatsManager
 ) {
@@ -99,7 +99,7 @@ open class GetPackageNetworkUseCase(
         return ""
     }
 
-    private fun log(description: String, bucket: NetworkStats.Bucket) {
+    protected fun log(description: String, bucket: NetworkStats.Bucket) {
         Log.d(
             "LogTime",
             "$description start: " + "${bucket.startTimeStamp.getFullDate()}, " +

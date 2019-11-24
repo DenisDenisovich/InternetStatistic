@@ -1,12 +1,11 @@
 package aero.testcompany.internetstat.view
 
 import aero.testcompany.internetstat.R
-import aero.testcompany.internetstat.util.getFullDate
+import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import android.app.NotificationManager
 import android.app.NotificationChannel
 import android.os.Build
@@ -17,10 +16,12 @@ import android.app.PendingIntent
 class StatisticService: Service() {
 
     val myBinder = StatisticBinder(this)
+    private var minutesScanner: ScannerNetworkMinutes? = null
 
     override fun onCreate() {
-
         super.onCreate()
+        minutesScanner = ScannerNetworkMinutes(applicationContext)
+        minutesScanner?.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

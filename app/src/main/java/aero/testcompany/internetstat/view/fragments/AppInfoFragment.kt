@@ -51,10 +51,10 @@ class AppInfoFragment : Fragment() {
         viewModel = ViewModelProviders.of(this)[AppInfoViewModel::class.java]
         viewModel.initData(requireContext(), myPackageInfo)
         viewModel.totalReceived.observe(this, androidx.lifecycle.Observer {
-            tv_received.text = resources.getString(R.string.total_received, toMb(it))
+            tv_received.text = resources.getString(R.string.total_received, it.toMb())
         })
         viewModel.totalTransmitted.observe(this, androidx.lifecycle.Observer {
-            tv_transmitted.text = resources.getString(R.string.total_transmitted, toMb(it))
+            tv_transmitted.text = resources.getString(R.string.total_transmitted, it.toMb())
         })
         viewModel.networkInfo.observe(this, androidx.lifecycle.Observer {
             networkInfo = it
@@ -82,7 +82,7 @@ class AppInfoFragment : Fragment() {
         chart.setPinchZoom(true)
         val values = arrayListOf<Entry>()
         for (i in networkData.indices) {
-            values.add(Entry(i.toFloat(), toMb(networkData[i]).toFloat()))
+            values.add(Entry(i.toFloat(), networkData[i].toMb().toFloat()))
         }
 
         val dataSet: LineDataSet

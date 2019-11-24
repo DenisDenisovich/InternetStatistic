@@ -2,6 +2,7 @@ package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
+import aero.testcompany.internetstat.util.toMb
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.util.Log
@@ -38,8 +39,10 @@ class ScannerNetworkMinutes(private val context: Context) {
             val calcWorks = ArrayList<Deferred<Pair<Long, Long>>>()
             while (isActive) {
                 calcWorks.clear()
-                updateCalculatorsList()
-                calculateMinuteNetwork()
+                withContext(Dispatchers.Default) {
+                    updateCalculatorsList()
+                    calculateMinuteNetwork()
+                }
                 log()
                 delay(1000 * 60)
             }
@@ -94,7 +97,11 @@ class ScannerNetworkMinutes(private val context: Context) {
 
     private fun log() {
         minuteBytes.forEach { (packageName, stat) ->
-            Log.d("LogStatMinutes", "$packageName - received: ${stat.first}, transmitted - ${stat.second}")
+            Log.d(
+                "LogStatMinutes",
+                "$packageName - received: ${stat.first.toMb()}, transmitted - ${stat.second.toMb()}"
+            )
         }
+        Log.d("LogStatMinutes", "/////////////////////////////////////////////////////////////")
     }
 }

@@ -35,9 +35,9 @@ class AppInfoViewModel : ViewModel() {
         val uid = getPackageUidUseCase.getUid(myPackageInfo.packageName)
         packageNetworkUseCase =
             GetPackageNetworkUseCase(
+                uid,
                 context,
-                networkStatsManager,
-                uid
+                networkStatsManager
             )
     }
 
