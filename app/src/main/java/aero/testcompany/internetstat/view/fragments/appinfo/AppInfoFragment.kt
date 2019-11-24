@@ -1,4 +1,4 @@
-package aero.testcompany.internetstat.view.fragments
+package aero.testcompany.internetstat.view.fragments.appinfo
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.domain.GetTimeLineUseCase
@@ -78,12 +78,6 @@ class AppInfoFragment : Fragment() {
         tv_name.text = myPackageInfo.name
         tv_package.text = myPackageInfo.packageName
         viewModel.update(interval, period)
-/*
-        spinner_received_sources.setOnItemClickListener { parent, view, position, id ->
-            when(position) {
-            }
-        }
-*/
     }
 
     private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
@@ -176,7 +170,14 @@ class AppInfoFragment : Fragment() {
         data.getNetworkData(source, state, bytesType)
             ?.let { networkData ->
                 val dataSet = getDataSet(networkData, source, state)
-                lines.add(NetworkLine(dataSet, source, state, bytesType))
+                lines.add(
+                    NetworkLine(
+                        dataSet,
+                        source,
+                        state,
+                        bytesType
+                    )
+                )
                 addDataSet(dataSet)
             }
     }

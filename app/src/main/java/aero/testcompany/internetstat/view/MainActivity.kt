@@ -2,7 +2,7 @@ package aero.testcompany.internetstat.view
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.MyPackageInfo
-import aero.testcompany.internetstat.view.fragments.AppInfoFragment
+import aero.testcompany.internetstat.view.fragments.appinfo.AppInfoFragment
 import aero.testcompany.internetstat.view.fragments.applist.AppListFragment
 import android.Manifest
 import android.annotation.TargetApi
@@ -14,7 +14,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
-import android.view.FrameMetrics
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentManager
 
