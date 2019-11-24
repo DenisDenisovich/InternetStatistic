@@ -18,7 +18,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.fragment_application_info.*
 import com.github.mikephil.charting.data.LineData
-import android.graphics.Color
 import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
 import androidx.lifecycle.ViewModelProviders
@@ -40,7 +39,7 @@ class AppInfoFragment : Fragment() {
     private val interval = 1000L * 60 * 60 * 24 * 31
     private val period = NetworkPeriod.DAY
     private val lines = arrayListOf<NetworkLine>()
-    val lineData = LineData()
+    val networkLinesData = LineData()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -91,19 +90,19 @@ class AppInfoFragment : Fragment() {
         chart.setTouchEnabled(true)
         chart.setPinchZoom(true)
         // add all state
-        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
         // add foreground state
-        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
         // add background state
-        lineData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
-        lineData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
+        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
         chart.apply {
-            data = lineData
+            data = networkLinesData
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
