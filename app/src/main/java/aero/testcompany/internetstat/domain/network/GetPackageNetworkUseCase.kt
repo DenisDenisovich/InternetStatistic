@@ -15,9 +15,9 @@ import android.util.Log
 
 @TargetApi(Build.VERSION_CODES.M)
 open class GetPackageNetworkUseCase(
+    public val packageUid: Int,
     protected val context: Context,
-    protected val networkStatsManager: NetworkStatsManager,
-    var packageUid: Int
+    protected val networkStatsManager: NetworkStatsManager
 ) {
    protected lateinit var getTimeLineUseCase: GetTimeLineUseCase
    protected val receiverList = arrayListOf<Long>()

@@ -2,9 +2,9 @@ package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
-import aero.testcompany.internetstat.models.MyPackageInfo
 import android.app.usage.NetworkStatsManager
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.*
 
 class ScannerNetworkMinutes(private val context: Context) {
@@ -18,10 +18,19 @@ class ScannerNetworkMinutes(private val context: Context) {
     private val packagesList = GetPackagesUseCase(context.packageManager)
     private val packageUid = GetPackageUidUseCase(context)
 
-    private val previewBytes: HashMap<String, Long> = HashMap()
+    private val previewBytes: HashMap<String, Pair<Long, Long>> = HashMap()
+    private val nextBytes: HashMap<String, Pair<Long, Long>> = HashMap()
+    private val minuteBytes: HashMap<String, Pair<Long, Long>> = HashMap()
 
     fun start() {
+        previewBytes.clear()
+        nextBytes.clear()
+        minuteBytes.clear()
+        startScanning()
+    }
 
+    fun stop() {
+        scope.cancel()
     }
 
     private fun startScanning() {
@@ -30,7 +39,8 @@ class ScannerNetworkMinutes(private val context: Context) {
             while (isActive) {
                 calcWorks.clear()
                 updateCalculatorsList()
-
+                calculateMinuteNetwork()
+                log()
                 delay(1000 * 60)
             }
         }
@@ -38,29 +48,53 @@ class ScannerNetworkMinutes(private val context: Context) {
 
     private fun updateCalculatorsList() {
         val packages = packagesList.getPackages()
-        val packagesMap = HashMap<String, MyPackageInfo>()
-        // get packages and update list
         packages.forEach {
-            packagesMap[it.packageName] = it
-            if (calculators.containsKey(it.packageName)) {
-                calculators[it.packageName]?.packageUid = packageUid.getUid(it.packageName)
-            } else {
-                calculators[it.packageName] = GetPackageNetworkMinutesUseCase(
-                    context,
-                    networkStartManager,
-                    packageUid.getUid(it.packageName)
+            calculators[it.packageName] = GetPackageNetworkMinutesUseCase(
+                it.packageName,
+                packageUid.getUid(it.packageName),
+                context,
+                networkStartManager
+            )
+        }
+    }
+
+    private fun calculateMinuteNetwork() {
+        // fill preview bytes if empty
+        if (previewBytes.isEmpty()) {
+            fillBytes(previewBytes)
+            return
+        }
+        // fill next bytes
+        fillBytes(nextBytes)
+        // calculate minutes network
+        minuteBytes.clear()
+        nextBytes.forEach { (key, nextBytes) ->
+            previewBytes[key]?.let { previewByte ->
+                minuteBytes[key] = Pair(
+                    nextBytes.first - previewByte.first,
+                    nextBytes.second - previewByte.second
                 )
             }
         }
-        // check deleted packages and remove it from list
-        calculators.keys.forEach {
-            if (!packagesMap.containsKey(it)) {
-                calculators.remove(it)
+        // replace previewBytes with nextBytes
+        previewBytes.clear()
+        nextBytes.forEach { (key, nextBytes) ->
+            previewBytes[key] = nextBytes
+        }
+    }
+
+    private fun fillBytes(hashBytes: HashMap<String, Pair<Long, Long>>) {
+        hashBytes.clear()
+        calculators.forEach {
+            with(it.value) {
+                hashBytes[packageName] = getLastMinutesInfo()
             }
         }
     }
 
-    fun stop() {
-        scope.cancel()
+    private fun log() {
+        minuteBytes.forEach { (packageName, stat) ->
+            Log.d("LogStatMinutes", "$packageName - received: ${stat.first}, transmitted - ${stat.second}")
+        }
     }
 }

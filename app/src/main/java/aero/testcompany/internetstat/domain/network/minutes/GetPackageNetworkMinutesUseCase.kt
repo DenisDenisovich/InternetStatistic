@@ -6,15 +6,20 @@ import android.app.usage.NetworkStatsManager
 import android.content.Context
 
 class GetPackageNetworkMinutesUseCase(
+    val packageName: String,
+    packageUid: Int,
     context: Context,
-    networkStatsManager: NetworkStatsManager,
-    packageUid: Int
-) : GetPackageNetworkUseCase(context, networkStatsManager, packageUid) {
+    networkStatsManager: NetworkStatsManager
+) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager) {
 
-    override fun getInfo(interval: Long, period: NetworkPeriod): Pair<List<Long>, List<Long>> {
+    fun getLastMinutesInfo(): Pair<Long, Long> {
+        receiverList.clear()
+        transmittedList.clear()
         val startTime = System.currentTimeMillis()
-        val endTime = startTime + NetworkPeriod.HOUR.getStep()
-        calculateBytes(startTime, endTime)
-        return Pair(receiverList, transmittedList)
+        val endTime = startTime + NetworkPeriod.MINUTES.getStep()
+        val minutesBytes = calculateBytes(startTime, endTime)
+        receiverList.add(minutesBytes.first)
+        transmittedList.add(minutesBytes.second)
+        return minutesBytes
     }
 }
