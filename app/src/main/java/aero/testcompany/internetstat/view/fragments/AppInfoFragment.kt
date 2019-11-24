@@ -1,10 +1,10 @@
 package aero.testcompany.internetstat.view.fragments
 
 import aero.testcompany.internetstat.R
-import aero.testcompany.internetstat.models.NetworkInfo
 import aero.testcompany.internetstat.domain.GetTimeLineUseCase
-import aero.testcompany.internetstat.models.MyPackageInfo
-import aero.testcompany.internetstat.models.NetworkPeriod
+import aero.testcompany.internetstat.models.*
+import aero.testcompany.internetstat.models.bucket.BucketInfo
+import aero.testcompany.internetstat.util.getNetworkData
 import aero.testcompany.internetstat.util.gone
 import aero.testcompany.internetstat.util.toMb
 import aero.testcompany.internetstat.util.visible
@@ -27,6 +27,7 @@ import com.github.mikephil.charting.components.XAxis
 import java.text.SimpleDateFormat
 import com.github.mikephil.charting.formatter.ValueFormatter
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class AppInfoFragment : Fragment() {
@@ -64,8 +65,8 @@ class AppInfoFragment : Fragment() {
                     timeLine.add(df.format(timeStamp))
                 }
             }
-            fillChart(chart_received, networkInfo.received)
-            fillChart(chart_transmitted, networkInfo.transmitted)
+            fillChart(chart_received, networkInfo.buckets, BytesType.RECEIVED)
+            fillChart(chart_transmitted, networkInfo.buckets, BytesType.TRANSMITTED)
             progress.gone()
             group_chart.visible()
         })
@@ -77,41 +78,50 @@ class AppInfoFragment : Fragment() {
         viewModel.update(interval, period)
     }
 
-    private fun fillChart(chart: LineChart, networkData: List<Long>) {
+    private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
         chart.setTouchEnabled(true)
         chart.setPinchZoom(true)
-        val values = arrayListOf<Entry>()
-        for (i in networkData.indices) {
-            values.add(Entry(i.toFloat(), networkData[i].toMb().toFloat()))
-        }
-
-        val dataSet: LineDataSet
-        dataSet = LineDataSet(values, "")
-        dataSet.apply {
-            setDrawIcons(false)
-            enableDashedLine(10f, 5f, 0f)
-            enableDashedHighlightLine(10f, 5f, 0f)
-            setDrawValues(false)
-            setDrawCircles(false)
-            color = Color.DKGRAY
-            setCircleColor(Color.DKGRAY)
-            lineWidth = 1f
-            circleRadius = 3f
-            setDrawCircleHole(false)
-            valueTextSize = 9f
-            setDrawFilled(true)
-            formLineWidth = 1f
-            formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
-            formSize = 15f
-            val drawable = ContextCompat.getDrawable(
-                requireContext(),
-                R.drawable.fade_blue
-            )
-            fillDrawable = drawable
-            isHighlightEnabled = false
-        }
         val lineData = LineData()
-        lineData.addDataSet(dataSet)
+        // add all state
+        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.ALL, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.ALL))
+            }
+        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.ALL))
+            }
+        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.ALL, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.ALL))
+            }
+        // add foreground state
+        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.FOREGROUND))
+            }
+        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.FOREGROUND))
+            }
+        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.FOREGROUND))
+            }
+        // add background state
+        networkData.getNetworkData(NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.ALL, ApplicationState.BACKGROUND))
+            }
+        networkData.getNetworkData(NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.MOBILE, ApplicationState.BACKGROUND))
+            }
+        networkData.getNetworkData(NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
+            ?.let { data ->
+                lineData.addDataSet(getDataSet(data, NetworkSource.WIFI, ApplicationState.BACKGROUND))
+            }
+
         chart.apply {
             data = lineData
             xAxis.apply {
@@ -125,6 +135,56 @@ class AppInfoFragment : Fragment() {
             }
             description.isEnabled = false
             legend.isEnabled = false
+        }
+    }
+
+    private fun getDataSet(
+        values: List<Long>,
+        source: NetworkSource,
+        state: ApplicationState
+    ): LineDataSet {
+        val lineValues: ArrayList<Entry> = arrayListOf()
+        for (index in values.indices) {
+            lineValues.add(Entry(index.toFloat(), values[index].toMb().toFloat()))
+        }
+        val graphColor = when(state) {
+            ApplicationState.ALL -> R.color.colorAll
+            ApplicationState.FOREGROUND -> R.color.colorForeground
+            ApplicationState.BACKGROUND -> R.color.colorBackground
+        }
+        val graphLine = when(source) {
+            NetworkSource.ALL -> null
+            NetworkSource.WIFI -> Triple(2F, 2F, 0F)
+            NetworkSource.MOBILE -> Triple(10F, 5F, 0F)
+        }
+        val graphDrawable = when(state) {
+            ApplicationState.ALL -> R.drawable.fade_all
+            ApplicationState.FOREGROUND -> R.drawable.fade_foreground
+            ApplicationState.BACKGROUND -> R.drawable.fade_background
+        }
+        return LineDataSet(lineValues, "").apply {
+            setDrawIcons(false)
+            graphLine?.let {
+                enableDashedLine(it.first, it.second, it.third)
+                enableDashedHighlightLine(it.first, it.second, it.third)
+            }
+            setDrawValues(false)
+            setDrawCircles(false)
+            color = graphColor
+            lineWidth = 1f
+            circleRadius = 3f
+            setDrawCircleHole(false)
+            valueTextSize = 9f
+            setDrawFilled(true)
+            formLineWidth = 1f
+            formLineDashEffect = DashPathEffect(floatArrayOf(10f, 5f), 0f)
+            formSize = 15f
+            val drawable = ContextCompat.getDrawable(
+                requireContext(),
+                graphDrawable
+            )
+            fillDrawable = drawable
+            isHighlightEnabled = false
         }
     }
 

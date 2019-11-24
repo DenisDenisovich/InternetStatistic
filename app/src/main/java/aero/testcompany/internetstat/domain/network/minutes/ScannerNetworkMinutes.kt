@@ -2,6 +2,8 @@ package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
+import aero.testcompany.internetstat.models.bucket.BucketInfo
+import aero.testcompany.internetstat.util.minus
 import aero.testcompany.internetstat.util.toMb
 import android.app.usage.NetworkStatsManager
 import android.content.Context
@@ -19,9 +21,9 @@ class ScannerNetworkMinutes(private val context: Context) {
     private val packagesList = GetPackagesUseCase(context.packageManager)
     private val packageUid = GetPackageUidUseCase(context)
 
-    private val previewBytes: HashMap<String, Pair<Long, Long>> = HashMap()
-    private val nextBytes: HashMap<String, Pair<Long, Long>> = HashMap()
-    private val minuteBytes: HashMap<String, Pair<Long, Long>> = HashMap()
+    private val previewBytes: HashMap<String, BucketInfo> = HashMap()
+    private val nextBytes: HashMap<String, BucketInfo> = HashMap()
+    private val minuteBytes: HashMap<String, BucketInfo> = HashMap()
 
     fun start() {
         previewBytes.clear()
@@ -44,7 +46,7 @@ class ScannerNetworkMinutes(private val context: Context) {
                     calculateMinuteNetwork()
                 }
                 log()
-                delay(1000 * 60)
+                delay(1000 * 10)
             }
         }
     }
@@ -73,10 +75,7 @@ class ScannerNetworkMinutes(private val context: Context) {
         minuteBytes.clear()
         nextBytes.forEach { (key, nextBytes) ->
             previewBytes[key]?.let { previewByte ->
-                minuteBytes[key] = Pair(
-                    nextBytes.first - previewByte.first,
-                    nextBytes.second - previewByte.second
-                )
+                minuteBytes[key] = nextBytes - previewByte
             }
         }
         // replace previewBytes with nextBytes
@@ -86,7 +85,7 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
     }
 
-    private fun fillBytes(hashBytes: HashMap<String, Pair<Long, Long>>) {
+    private fun fillBytes(hashBytes: HashMap<String, BucketInfo>) {
         hashBytes.clear()
         calculators.forEach {
             with(it.value) {
@@ -99,7 +98,7 @@ class ScannerNetworkMinutes(private val context: Context) {
         minuteBytes.forEach { (packageName, stat) ->
             Log.d(
                 "LogStatMinutes",
-                "$packageName - received: ${stat.first.toMb()}, transmitted - ${stat.second.toMb()}"
+                "$packageName - $stat"
             )
         }
         Log.d("LogStatMinutes", "/////////////////////////////////////////////////////////////")

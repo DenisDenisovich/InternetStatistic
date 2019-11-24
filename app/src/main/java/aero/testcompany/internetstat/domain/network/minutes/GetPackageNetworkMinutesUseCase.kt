@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
+import aero.testcompany.internetstat.models.bucket.BucketInfo
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import java.util.*
@@ -12,9 +13,8 @@ class GetPackageNetworkMinutesUseCase(
     networkStatsManager: NetworkStatsManager
 ) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager) {
 
-    fun getLastMinutesInfo(): Pair<Long, Long> {
-        receiverList.clear()
-        transmittedList.clear()
+    fun getLastMinutesInfo(): BucketInfo {
+        bucketsList.clear()
         val calendar = GregorianCalendar().apply {
             timeInMillis = System.currentTimeMillis()
             set(Calendar.MINUTE, 0)
@@ -25,8 +25,7 @@ class GetPackageNetworkMinutesUseCase(
         calendar.add(Calendar.HOUR_OF_DAY, 3)
         val endTime = calendar.timeInMillis
         val minutesBytes = calculateBytes(startTime, endTime)
-        receiverList.add(minutesBytes.first)
-        transmittedList.add(minutesBytes.second)
+        bucketsList.add(minutesBytes)
         return minutesBytes
     }
 }
