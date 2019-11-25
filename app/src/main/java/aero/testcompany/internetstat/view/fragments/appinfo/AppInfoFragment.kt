@@ -153,7 +153,7 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
         chart.setPinchZoom(true)
         NetworkSource.values().forEach { source ->
             ApplicationState.values().forEach { state ->
-                    addDataSet(networkData, source, state, bytesType)
+                addDataSet(networkData, source, state, bytesType)
             }
         }
         chart.apply {
@@ -251,12 +251,12 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
             .forEach { getLinesDataSet(byteType).removeDataSet(it.line) }
         lines.filter {
             it.bytesType == byteType &&
-                sources.contains(it.source) &&
-                states.contains(it.state)
+                    sources.contains(it.source) &&
+                    states.contains(it.state)
         }.forEach { getLinesDataSet(byteType).addDataSet(it.line) }
     }
 
-    private fun getLinesDataSet(bytesType: BytesType) = if(bytesType == BytesType.RECEIVED) {
+    private fun getLinesDataSet(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {
         networkReceivedLinesData
     } else {
         networkTransmittedLinesData

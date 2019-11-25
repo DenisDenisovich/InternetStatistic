@@ -4,10 +4,16 @@ import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.ApplicationState
 import aero.testcompany.internetstat.models.BytesType
 import aero.testcompany.internetstat.models.NetworkSource
+import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
 
 
 class GraphLineDialog : DialogFragment() {
@@ -31,14 +37,15 @@ class GraphLineDialog : DialogFragment() {
         }
     }
 
+    @SuppressLint("DefaultLocale")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         AlertDialog.Builder(requireContext()).run {
             val dialogType = if (selectedSources.isNotEmpty()) "source" else "state"
-            setTitle("Select $type $dialogType")
+            setTitle("Select ${type?.name?.toLowerCase()} $dialogType")
             setIcon(android.R.drawable.ic_dialog_alert)
             setMultiChoiceItems(
-                R.array.sources,
-                booleanArrayOf(true, false, false)
+                if (selectedSources.isNotEmpty()) R.array.sources else R.array.states,
+                getSelectedItems()
             ) { _, which, isChecked ->
                 if (selectedSources.isNotEmpty()) {
                     selectedSources.remove(NetworkSource.values()[which])
@@ -71,6 +78,21 @@ class GraphLineDialog : DialogFragment() {
         listener = null
     }
 
+    private fun getSelectedItems(): BooleanArray =
+        if(selectedSources.isNotEmpty()) {
+            booleanArrayOf(
+                selectedSources.contains(NetworkSource.ALL),
+                selectedSources.contains(NetworkSource.MOBILE),
+                selectedSources.contains(NetworkSource.WIFI)
+            )
+        } else {
+            booleanArrayOf(
+                selectedStates.contains(ApplicationState.ALL),
+                selectedStates.contains(ApplicationState.FOREGROUND),
+                selectedStates.contains(ApplicationState.BACKGROUND)
+            )
+        }
+
     interface OnGraphSelected {
         fun onSourceSelected(bytesType: BytesType, sources: ArrayList<NetworkSource>)
         fun onStateSelected(bytesType: BytesType, states: ArrayList<ApplicationState>)
@@ -87,7 +109,7 @@ class GraphLineDialog : DialogFragment() {
             bytesType: BytesType,
             sources: ArrayList<NetworkSource>? = null,
             states: ArrayList<ApplicationState>? = null
-        ) = DialogFragment().apply {
+        ) = GraphLineDialog().apply {
             this@Companion.listener = listener
             arguments = Bundle().apply {
                 sources?.let {
