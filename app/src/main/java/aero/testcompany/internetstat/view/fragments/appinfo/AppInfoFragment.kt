@@ -25,6 +25,7 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import java.text.SimpleDateFormat
 import com.github.mikephil.charting.formatter.ValueFormatter
+import java.lang.StringBuilder
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -254,6 +255,20 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
                     sources.contains(it.source) &&
                     states.contains(it.state)
         }.forEach { getLinesDataSet(byteType).addDataSet(it.line) }
+        val strBuilder = StringBuilder()
+        if (byteType == BytesType.RECEIVED) {
+            sourcesReceived.forEach { strBuilder.append(", " + it.name) }
+            tv_received_sources.text = strBuilder.removeRange(0, 1).toString()
+            strBuilder.clear()
+            statesReceived.forEach { strBuilder.append(", " + it.name) }
+            tv_received_states.text = strBuilder.removeRange(0, 1).toString()
+        } else {
+            sourcesTransmitted.forEach { strBuilder.append(", " + it.name) }
+            tv_transmitted_sources.text = strBuilder.removeRange(0, 1).toString()
+            strBuilder.clear()
+            statesTransmitted.forEach { strBuilder.append(", " + it.name) }
+            tv_transmitted_states.text = strBuilder.removeRange(0, 1).toString()
+        }
     }
 
     private fun getLinesDataSet(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {

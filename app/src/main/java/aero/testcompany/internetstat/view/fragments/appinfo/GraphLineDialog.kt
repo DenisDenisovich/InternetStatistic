@@ -42,7 +42,7 @@ class GraphLineDialog : DialogFragment() {
         AlertDialog.Builder(requireContext()).run {
             val dialogType = if (selectedSources.isNotEmpty()) "source" else "state"
             setTitle("Select ${type?.name?.toLowerCase()} $dialogType")
-            setIcon(android.R.drawable.ic_dialog_alert)
+            setIcon(R.drawable.ic_settings_black_24dp)
             setMultiChoiceItems(
                 if (selectedSources.isNotEmpty()) R.array.sources else R.array.states,
                 getSelectedItems()

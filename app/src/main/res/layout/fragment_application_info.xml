@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:padding="16dp">
 
-    <androidx.constraintlayout.widget.Group
+        <androidx.constraintlayout.widget.Group
             android:id="@+id/group_chart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -14,7 +18,7 @@
             app:constraint_referenced_ids="tv_received,tv_transmitted,chart_received,chart_transmitted,tv_received_sources,tv_received_states,tv_transmitted_sources,tv_transmitted_states"
             tools:visibility="visible" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/iv_icon"
             android:layout_width="56dp"
             android:layout_height="56dp"
@@ -22,7 +26,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:src="@mipmap/ic_launcher" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -33,7 +37,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Application" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_package"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -45,7 +49,7 @@
             app:layout_constraintTop_toBottomOf="@id/tv_name"
             tools:text="app.android.application" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_received"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -53,51 +57,49 @@
             android:text="Received"
             android:textColor="#000000"
             android:textSize="16sp"
-            app:layout_constraintBottom_toTopOf="@id/chart_received"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/iv_icon"
             tools:ignore="HardcodedText" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_received_sources"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
             android:drawableEnd="@drawable/ic_arrow_drop_down_black_24dp"
             android:textColor="#000000"
-            app:layout_constraintBottom_toTopOf="@id/chart_received"
-            app:layout_constraintEnd_toStartOf="@id/tv_received_states"
-            app:layout_constraintStart_toStartOf="parent"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackground"
             app:layout_constraintTop_toBottomOf="@id/tv_received"
+            app:layout_constraintBottom_toTopOf="@id/tv_received_states"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="All" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_received_states"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackground"
             android:drawableEnd="@drawable/ic_arrow_drop_down_black_24dp"
             android:textColor="#000000"
-            app:layout_constraintBottom_toBottomOf="@id/tv_received_sources"
+            app:layout_constraintTop_toBottomOf="@id/tv_received_sources"
+            app:layout_constraintBottom_toTopOf="@id/chart_received"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_received_sources"
-            app:layout_constraintTop_toTopOf="@id/tv_received_sources"
+            app:layout_constraintStart_toStartOf="parent"
             tools:text="All" />
 
 
-    <com.github.mikephil.charting.charts.LineChart
+        <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart_received"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="200dp"
             app:layout_constraintBottom_toTopOf="@id/tv_transmitted"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_received_sources" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_transmitted"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -110,45 +112,44 @@
             app:layout_constraintTop_toBottomOf="@id/chart_received"
             tools:ignore="HardcodedText" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_transmitted_sources"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackground"
             android:drawableEnd="@drawable/ic_arrow_drop_down_black_24dp"
             android:textColor="#000000"
             app:layout_constraintBottom_toTopOf="@id/chart_transmitted"
-            app:layout_constraintEnd_toStartOf="@id/tv_transmitted_states"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_transmitted"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             tools:text="All" />
 
-    <TextView
+        <TextView
             android:id="@+id/tv_transmitted_states"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackground"
             android:drawableEnd="@drawable/ic_arrow_drop_down_black_24dp"
             android:textColor="#000000"
-            app:layout_constraintBottom_toBottomOf="@id/tv_transmitted_sources"
+            app:layout_constraintBottom_toTopOf="@id/chart_transmitted"
+            app:layout_constraintTop_toBottomOf="@id/tv_transmitted_sources"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tv_transmitted_sources"
-            app:layout_constraintTop_toTopOf="@id/tv_transmitted_sources"
             tools:text="All" />
 
-    <com.github.mikephil.charting.charts.LineChart
+        <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart_transmitted"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="200dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_transmitted_sources" />
 
-    <ProgressBar
+        <ProgressBar
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -157,4 +158,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/iv_icon" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
