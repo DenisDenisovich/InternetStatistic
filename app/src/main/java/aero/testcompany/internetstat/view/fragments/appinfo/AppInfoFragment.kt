@@ -28,8 +28,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 
-
-class AppInfoFragment : Fragment() {
+class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGraphSelected {
 
     private val df = SimpleDateFormat("MM.dd", Locale.getDefault())
     private lateinit var networkInfo: NetworkInfo
@@ -39,15 +38,18 @@ class AppInfoFragment : Fragment() {
     private val interval = 1000L * 60 * 60 * 24 * 31
     private val period = NetworkPeriod.DAY
     private val lines = arrayListOf<NetworkLine>()
-    val networkLinesData = LineData()
+    private val networkReceivedLinesData = LineData()
+    private val networkTransmittedLinesData = LineData()
+    private val sourcesTransmitted = arrayListOf(NetworkSource.ALL)
+    private val statesTransmitted = arrayListOf(ApplicationState.ALL)
+    private val sourcesReceived = arrayListOf(NetworkSource.ALL)
+    private val statesReceived = arrayListOf(ApplicationState.ALL)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_application_info, container, false)
-    }
+    ): View? = inflater.inflate(R.layout.fragment_application_info, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         myPackageInfo = arguments?.getParcelable(INFO_KEY) as MyPackageInfo
@@ -71,6 +73,13 @@ class AppInfoFragment : Fragment() {
             fillChart(chart_transmitted, networkInfo.buckets, BytesType.TRANSMITTED)
             progress.gone()
             group_chart.visible()
+
+            changeSelectedLines(BytesType.RECEIVED)
+            changeSelectedLines(BytesType.TRANSMITTED)
+            networkReceivedLinesData.notifyDataChanged()
+            networkTransmittedLinesData.notifyDataChanged()
+            chart_transmitted.invalidate()
+            chart_received.invalidate()
         })
         iv_icon.setImageDrawable(
             requireContext().packageManager.getApplicationIcon(myPackageInfo.packageName)
@@ -78,25 +87,84 @@ class AppInfoFragment : Fragment() {
         tv_name.text = myPackageInfo.name
         tv_package.text = myPackageInfo.packageName
         viewModel.update(interval, period)
+        tv_received_sources.setOnClickListener(this)
+        tv_received_states.setOnClickListener(this)
+        tv_transmitted_sources.setOnClickListener(this)
+        tv_transmitted_states.setOnClickListener(this)
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.tv_received_sources -> {
+                GraphLineDialog
+                    .getInstance(this, BytesType.RECEIVED, sourcesReceived)
+                    .show(childFragmentManager, null)
+            }
+            R.id.tv_received_states -> {
+                GraphLineDialog
+                    .getInstance(this, BytesType.RECEIVED, states = statesReceived)
+                    .show(childFragmentManager, null)
+            }
+            R.id.tv_transmitted_sources -> {
+                GraphLineDialog
+                    .getInstance(this, BytesType.TRANSMITTED, sourcesReceived)
+                    .show(childFragmentManager, null)
+            }
+            R.id.tv_transmitted_states -> {
+                GraphLineDialog
+                    .getInstance(this, BytesType.TRANSMITTED, states = statesReceived)
+                    .show(childFragmentManager, null)
+            }
+        }
+    }
+
+    override fun onSourceSelected(bytesType: BytesType, sources: ArrayList<NetworkSource>) {
+        if (bytesType == BytesType.RECEIVED) {
+            sourcesReceived.clear()
+            sourcesReceived.addAll(sources)
+        } else {
+            sourcesTransmitted.clear()
+            sourcesTransmitted.addAll(sources)
+        }
+        changeSelectedLines(bytesType)
+        networkReceivedLinesData.notifyDataChanged()
+        networkTransmittedLinesData.notifyDataChanged()
+        chart_transmitted.invalidate()
+        chart_received.invalidate()
+    }
+
+    override fun onStateSelected(bytesType: BytesType, states: ArrayList<ApplicationState>) {
+        if (bytesType == BytesType.RECEIVED) {
+            statesReceived.clear()
+            statesReceived.addAll(states)
+        } else {
+            statesTransmitted.clear()
+            statesTransmitted.addAll(states)
+        }
+        changeSelectedLines(bytesType)
+        networkReceivedLinesData.notifyDataChanged()
+        networkTransmittedLinesData.notifyDataChanged()
+        chart_received.invalidate()
+        chart_transmitted.invalidate()
     }
 
     private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
         chart.setTouchEnabled(true)
         chart.setPinchZoom(true)
         // add all state
-        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
+        addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
+        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
+        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
         // add foreground state
-        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
         // add background state
-        networkLinesData.addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
-        networkLinesData.addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
+        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
         chart.apply {
-            data = networkLinesData
+            data = getLinesDataSet(bytesType)
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
@@ -110,6 +178,7 @@ class AppInfoFragment : Fragment() {
             legend.isEnabled = false
         }
     }
+
 
     private fun getDataSet(
         values: List<Long>,
@@ -161,7 +230,7 @@ class AppInfoFragment : Fragment() {
         }
     }
 
-    private fun LineData.addDataSet(
+    private fun addDataSet(
         data: List<BucketInfo>,
         source: NetworkSource,
         state: ApplicationState,
@@ -178,9 +247,34 @@ class AppInfoFragment : Fragment() {
                         bytesType
                     )
                 )
-                addDataSet(dataSet)
+                getLinesDataSet(bytesType).addDataSet(dataSet)
             }
     }
+
+    private fun changeSelectedLines(byteType: BytesType) {
+        val sources = if (byteType == BytesType.RECEIVED) sourcesReceived else sourcesTransmitted
+        val states = if (byteType == BytesType.RECEIVED) statesReceived else statesTransmitted
+        lines.filter { it.bytesType == byteType }
+            .forEach { getLinesDataSet(byteType).removeDataSet(it.line) }
+        lines.filter {
+            it.bytesType == byteType &&
+                sources.contains(it.source) &&
+                states.contains(it.state)
+        }.forEach { getLinesDataSet(byteType).addDataSet(it.line) }
+    }
+
+    private fun getLinesDataSet(bytesType: BytesType) = if(bytesType == BytesType.RECEIVED) {
+        networkReceivedLinesData
+    } else {
+        networkTransmittedLinesData
+    }
+
+    class NetworkLine(
+        val line: LineDataSet,
+        val source: NetworkSource,
+        val state: ApplicationState,
+        val bytesType: BytesType
+    )
 
     companion object {
         private const val INFO_KEY = "key"
@@ -191,13 +285,6 @@ class AppInfoFragment : Fragment() {
                 }
             }
     }
-
-    class NetworkLine(
-        val line: LineDataSet,
-        val source: NetworkSource,
-        val state: ApplicationState,
-        val bytesType: BytesType
-    )
 }
 
 
