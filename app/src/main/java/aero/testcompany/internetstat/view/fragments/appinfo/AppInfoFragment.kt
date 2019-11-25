@@ -151,18 +151,11 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
     private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
         chart.setTouchEnabled(true)
         chart.setPinchZoom(true)
-        // add all state
-        addDataSet(networkData, NetworkSource.ALL, ApplicationState.ALL, bytesType)
-        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.ALL, bytesType)
-        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.ALL, bytesType)
-        // add foreground state
-        addDataSet(networkData, NetworkSource.ALL, ApplicationState.FOREGROUND, bytesType)
-        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.FOREGROUND, bytesType)
-        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.FOREGROUND, bytesType)
-        // add background state
-        addDataSet(networkData, NetworkSource.ALL, ApplicationState.BACKGROUND, bytesType)
-        addDataSet(networkData, NetworkSource.MOBILE, ApplicationState.BACKGROUND, bytesType)
-        addDataSet(networkData, NetworkSource.WIFI, ApplicationState.BACKGROUND, bytesType)
+        NetworkSource.values().forEach { source ->
+            ApplicationState.values().forEach { state ->
+                    addDataSet(networkData, source, state, bytesType)
+            }
+        }
         chart.apply {
             data = getLinesDataSet(bytesType)
             xAxis.apply {
@@ -180,7 +173,7 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
     }
 
 
-    private fun getDataSet(
+    private fun getLineDataSet(
         values: List<Long>,
         source: NetworkSource,
         state: ApplicationState
@@ -238,7 +231,7 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
     ) {
         data.getNetworkData(source, state, bytesType)
             ?.let { networkData ->
-                val dataSet = getDataSet(networkData, source, state)
+                val dataSet = getLineDataSet(networkData, source, state)
                 lines.add(
                     NetworkLine(
                         dataSet,
