@@ -15,23 +15,40 @@ import kotlinx.coroutines.*
 
 class AppListAdapter : RecyclerView.Adapter<AppListAdapter.ApplicationViewHolder>() {
 
-    var items: ArrayList<MyPackageInfo> = arrayListOf()
     var onItemClicked: ((packageInfo: MyPackageInfo) -> Unit)? = null
+    private var items: ArrayList<MyPackageInfo> = arrayListOf()
+    private var filterItems: ArrayList<MyPackageInfo> = arrayListOf()
+
+    fun setItems(items: ArrayList<MyPackageInfo>) {
+        this.items.clear()
+        this.items.addAll(items)
+        filterItems.clear()
+        filterItems.addAll(items)
+        notifyDataSetChanged()
+    }
+
+    fun setFilter(filter: String) {
+        filterItems.clear()
+        filterItems.addAll(
+            items.filter { it.name.contains(filter, true) || it.packageName.contains(filter, true)}
+        )
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ApplicationViewHolder {
         return ApplicationViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.item_package_info, parent, false)
         ).apply {
             itemView.setOnClickListener {
-                onItemClicked?.invoke(items[adapterPosition])
+                onItemClicked?.invoke(filterItems[adapterPosition])
             }
         }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = filterItems.size
 
     override fun onBindViewHolder(holder: ApplicationViewHolder, position: Int) {
-        holder.bind(items[position])
+        holder.bind(filterItems[position])
     }
 
     class ApplicationViewHolder(

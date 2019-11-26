@@ -114,7 +114,7 @@ class ScannerNetworkMinutes(private val context: Context) {
             }
             val lineShort = stat.toStringShort()
             if (lineShort.isNotEmpty()) {
-                fileBody.append("${(Math.random() * 1000).toInt()}-${stat.toStringShort()}")
+                fileBody.append("${packageName.split(".").lastOrNull()}-${lineShort}")
             }
         }
         if (fileBody.isNotEmpty()) {

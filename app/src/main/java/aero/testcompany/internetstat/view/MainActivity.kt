@@ -57,6 +57,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        val currentFragment = supportFragmentManager.fragments.lastOrNull() as? BackPressed
+        if (currentFragment is BackPressed) {
+            if (!currentFragment.onBackPressed()) {
+                goBack()
+            }
+        } else {
+            goBack()
+        }
+    }
+
+    private fun goBack() {
         if (supportFragmentManager.backStackEntryCount == 1) {
             finish()
         } else {
