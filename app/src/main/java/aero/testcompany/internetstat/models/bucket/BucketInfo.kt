@@ -4,8 +4,24 @@ data class BucketInfo(
     val all: BucketSource,
     val foreground: BucketSource?,
     val background: BucketSource?
-) {
-    override fun toString(): String {
-        return "all {$all}, foreground {$foreground}, background {$background}"
-    }
+) : ShortString {
+    override fun toString(): String =
+        if (all.toString().isEmpty() &&
+            foreground?.toString().isNullOrEmpty() &&
+            background?.toString().isNullOrEmpty()
+        ) {
+            ""
+        } else {
+            "all {$all}, foreground {$foreground}, background {$background}"
+        }
+
+    override fun toStringShort(): String =
+        if (all.toStringShort().isEmpty() &&
+            foreground?.toStringShort().isNullOrEmpty() &&
+            background?.toStringShort().isNullOrEmpty()
+        ) {
+            ""
+        } else {
+            "{${all.toStringShort()}},{${foreground?.toStringShort()}},{${background?.toStringShort()}}"
+        }
 }

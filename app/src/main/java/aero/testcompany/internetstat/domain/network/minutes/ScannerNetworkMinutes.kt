@@ -1,14 +1,20 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
+import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.minus
-import aero.testcompany.internetstat.util.toMb
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
+import java.lang.StringBuilder
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+
 
 class ScannerNetworkMinutes(private val context: Context) {
 
@@ -46,7 +52,7 @@ class ScannerNetworkMinutes(private val context: Context) {
                     calculateMinuteNetwork()
                 }
                 log()
-                delay(1000 * 10)
+                delay(1000 * 60)
             }
         }
     }
@@ -95,11 +101,27 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private fun log() {
+        val sdf = SimpleDateFormat("MM_dd_yyyy_HH_mm_ss", Locale.US)
+        val time = sdf.format(Date())
+        val fileBody = StringBuilder()
         minuteBytes.forEach { (packageName, stat) ->
-            Log.d(
-                "LogStatMinutes",
-                "$packageName - $stat"
-            )
+            val line = stat.toString()
+            if (line.isNotEmpty()) {
+                Log.d(
+                    "LogStatMinutes",
+                    "$packageName - $line"
+                )
+            }
+            val lineShort = stat.toStringShort()
+            if (lineShort.isNotEmpty()) {
+                fileBody.append("${(Math.random() * 1000).toInt()}-${stat.toStringShort()}")
+            }
+        }
+        if (fileBody.isNotEmpty()) {
+            MyFileWriter(context, time).apply {
+                add(fileBody.toString())
+                close()
+            }
         }
         Log.d("LogStatMinutes", "/////////////////////////////////////////////////////////////")
     }
