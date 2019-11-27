@@ -173,7 +173,6 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
         }
     }
 
-
     private fun getLineDataSet(
         values: List<Long>,
         source: NetworkSource,
@@ -190,8 +189,12 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
         }
         val graphLine = when (source) {
             NetworkSource.ALL -> null
-            NetworkSource.WIFI -> Triple(2F, 2F, 0F)
-            NetworkSource.MOBILE -> Triple(10F, 5F, 0F)
+            NetworkSource.MOBILE -> null
+            NetworkSource.WIFI -> Triple(15F, 15F, 0F)
+        }
+        val dataLineWidth = when(source) {
+            NetworkSource.ALL -> 2f
+            else -> 1f
         }
         val graphDrawable = when (state) {
             ApplicationState.ALL -> R.drawable.fade_all
@@ -207,7 +210,7 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
             setDrawValues(false)
             setDrawCircles(false)
             color = graphColor
-            lineWidth = 1f
+            lineWidth = dataLineWidth
             circleRadius = 3f
             setDrawCircleHole(false)
             valueTextSize = 9f
