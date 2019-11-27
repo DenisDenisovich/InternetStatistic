@@ -47,6 +47,7 @@ class GetTimeLineUseCase(private val interval: Long, private val period: Network
                 NetworkPeriod.MONTH -> add(Calendar.MONTH, 1)
                 NetworkPeriod.WEEK -> add(Calendar.WEEK_OF_YEAR, 1)
                 NetworkPeriod.DAY -> add(Calendar.DAY_OF_YEAR, 1)
+                NetworkPeriod.HOUR -> add(Calendar.HOUR_OF_DAY, 1)
                 else -> {
                 }
             }

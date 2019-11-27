@@ -7,7 +7,6 @@ import aero.testcompany.internetstat.util.visible
 import aero.testcompany.internetstat.view.BackPressed
 import aero.testcompany.internetstat.viewmodel.AppListViewModel
 import android.content.Context
-import android.inputmethodservice.InputMethodService
 import android.os.Bundle
 import android.text.Editable
 import android.transition.TransitionManager
@@ -15,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
