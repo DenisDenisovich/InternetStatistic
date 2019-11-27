@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Period"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
+
+        <Button
+                android:id="@+id/btn_period_minutes"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="Minutes"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_period_hour"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="Hour"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_period_day"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="DAY"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_period_week"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="Week"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_period_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="Month"
+                tools:ignore="HardcodedText" />
+
+    </LinearLayout>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Interval"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+        <Button
+                android:id="@+id/btn_interval_1_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/back_period"
+                android:text="1 M"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_interval_2_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="@drawable/back_period"
+                android:layout_weight="1"
+                android:text="2 M"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_interval_4_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="@drawable/back_period"
+                android:layout_weight="1"
+                android:text="4 M"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_interval_6_month"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="@drawable/back_period"
+                android:layout_weight="1"
+                android:text="6 M"
+                tools:ignore="HardcodedText" />
+
+        <Button
+                android:id="@+id/btn_interval_year"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="@drawable/back_period"
+                android:layout_weight="1"
+                android:text="Year"
+                tools:ignore="HardcodedText" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -5,6 +5,7 @@ import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkInfo
+import aero.testcompany.internetstat.models.NetworkInterval
 import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import android.app.usage.NetworkStatsManager
@@ -42,11 +43,11 @@ class AppInfoViewModel : ViewModel() {
             )
     }
 
-    fun update(interval: Long, period: NetworkPeriod) {
+    fun update(interval: NetworkInterval, period: NetworkPeriod) {
         networkPeriod = period
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
-                val bucketList = packageNetworkUseCase.getInfo(interval, period)
+                val bucketList = packageNetworkUseCase.getInfo(interval.getInterval(), period)
                 var receivedSum: Long = 0
                 var transmittedSum: Long = 0
                 bucketList.forEach { bucket ->
@@ -55,7 +56,7 @@ class AppInfoViewModel : ViewModel() {
                 }
                 totalReceived.postValue(receivedSum)
                 totalTransmitted.postValue(transmittedSum)
-                val getTimeLineUseCase = GetTimeLineUseCase(interval, period)
+                val getTimeLineUseCase = GetTimeLineUseCase(interval.getInterval(), period)
                 val timeLine = getTimeLineUseCase.getTimeLine()
                 networkInfo.postValue(
                     NetworkInfo(

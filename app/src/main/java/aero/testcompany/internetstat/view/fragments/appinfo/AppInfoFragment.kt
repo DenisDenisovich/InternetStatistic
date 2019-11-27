@@ -20,24 +20,27 @@ import kotlinx.android.synthetic.main.fragment_application_info.*
 import com.github.mikephil.charting.data.LineData
 import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import java.text.SimpleDateFormat
 import com.github.mikephil.charting.formatter.ValueFormatter
-import java.lang.StringBuilder
 import java.util.*
 import kotlin.collections.ArrayList
 
-class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGraphSelected {
+class AppInfoFragment : Fragment(),
+    View.OnClickListener,
+    LinesBottomSheetDialog.OnGraphSelected,
+    PeriodBottomSheetDialog.PeriodListener {
 
     private val df = SimpleDateFormat("MM.dd", Locale.getDefault())
     private lateinit var networkInfo: NetworkInfo
     private lateinit var myPackageInfo: MyPackageInfo
     private var timeLine = arrayListOf<String>()
     private lateinit var viewModel: AppInfoViewModel
-    private val interval = 1000L * 60 * 60 * 24 * 31
-    private val period = NetworkPeriod.DAY
+    private var interval = NetworkInterval.TWO_MONTH
+    private var period = NetworkPeriod.DAY
     private val lines = arrayListOf<NetworkLine>()
     private val networkReceivedLinesData = LineData()
     private val networkTransmittedLinesData = LineData()
@@ -64,7 +67,26 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
         })
         viewModel.networkInfo.observe(this, androidx.lifecycle.Observer {
             networkInfo = it
-            with(GetTimeLineUseCase(interval, period)) {
+            lines.clear()
+            networkReceivedLinesData.clearValues()
+            networkTransmittedLinesData.clearValues()
+            chart_received.apply {
+                fitScreen()
+                data?.clearValues()
+                xAxis?.valueFormatter = null
+                notifyDataSetChanged()
+                clear()
+                invalidate()
+            }
+            chart_transmitted.apply {
+                fitScreen()
+                data?.clearValues()
+                xAxis?.valueFormatter = null
+                notifyDataSetChanged()
+                clear()
+                invalidate()
+            }
+            with(GetTimeLineUseCase(interval.getInterval(), period)) {
                 timeLine.clear()
                 getTimeLine().forEach { timeStamp ->
                     timeLine.add(df.format(timeStamp))
@@ -88,35 +110,40 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
         tv_name.text = myPackageInfo.name
         tv_package.text = myPackageInfo.packageName
         viewModel.update(interval, period)
-        tv_received_sources.setOnClickListener(this)
-        tv_received_states.setOnClickListener(this)
-        tv_transmitted_sources.setOnClickListener(this)
-        tv_transmitted_states.setOnClickListener(this)
+        btn_received_lines.setOnClickListener(this)
+        btn_transmitted_lines.setOnClickListener(this)
+        btn_period.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.tv_received_sources -> {
-                GraphLineDialog
-                    .getInstance(this, BytesType.RECEIVED, sourcesReceived)
+            R.id.btn_received_lines -> {
+                LinesBottomSheetDialog
+                    .getInstance(this, BytesType.RECEIVED, sourcesReceived, statesReceived)
                     .show(childFragmentManager, null)
             }
-            R.id.tv_received_states -> {
-                GraphLineDialog
-                    .getInstance(this, BytesType.RECEIVED, states = statesReceived)
+            R.id.btn_transmitted_lines -> {
+                LinesBottomSheetDialog
+                    .getInstance(this, BytesType.TRANSMITTED, sourcesTransmitted, statesTransmitted)
                     .show(childFragmentManager, null)
             }
-            R.id.tv_transmitted_sources -> {
-                GraphLineDialog
-                    .getInstance(this, BytesType.TRANSMITTED, sourcesReceived)
+            R.id.btn_period ->
+                PeriodBottomSheetDialog
+                    .getInstance(this, period, interval)
                     .show(childFragmentManager, null)
-            }
-            R.id.tv_transmitted_states -> {
-                GraphLineDialog
-                    .getInstance(this, BytesType.TRANSMITTED, states = statesReceived)
-                    .show(childFragmentManager, null)
-            }
         }
+    }
+
+    override fun changePeriodAndInterval(period: NetworkPeriod, interval: NetworkInterval) {
+        if (period == NetworkPeriod.MINUTES) {
+            Toast.makeText(requireContext(), "Minutes doesn't support now", Toast.LENGTH_LONG).show()
+            return
+        }
+        this.period = period
+        this.interval = interval
+        viewModel.update(interval, period)
+        progress.visible()
+        group_chart.gone()
     }
 
     override fun onSourceSelected(bytesType: BytesType, sources: ArrayList<NetworkSource>) {
@@ -192,7 +219,7 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
             NetworkSource.MOBILE -> null
             NetworkSource.WIFI -> Triple(15F, 15F, 0F)
         }
-        val dataLineWidth = when(source) {
+        val dataLineWidth = when (source) {
             NetworkSource.ALL -> 2f
             else -> 1f
         }
@@ -255,23 +282,9 @@ class AppInfoFragment : Fragment(), View.OnClickListener, GraphLineDialog.OnGrap
             .forEach { getLinesDataSet(byteType).removeDataSet(it.line) }
         lines.filter {
             it.bytesType == byteType &&
-                    sources.contains(it.source) &&
-                    states.contains(it.state)
+                sources.contains(it.source) &&
+                states.contains(it.state)
         }.forEach { getLinesDataSet(byteType).addDataSet(it.line) }
-        val strBuilder = StringBuilder()
-        if (byteType == BytesType.RECEIVED) {
-            sourcesReceived.forEach { strBuilder.append(", " + it.name) }
-            tv_received_sources.text = strBuilder.removeRange(0, 1).toString()
-            strBuilder.clear()
-            statesReceived.forEach { strBuilder.append(", " + it.name) }
-            tv_received_states.text = strBuilder.removeRange(0, 1).toString()
-        } else {
-            sourcesTransmitted.forEach { strBuilder.append(", " + it.name) }
-            tv_transmitted_sources.text = strBuilder.removeRange(0, 1).toString()
-            strBuilder.clear()
-            statesTransmitted.forEach { strBuilder.append(", " + it.name) }
-            tv_transmitted_states.text = strBuilder.removeRange(0, 1).toString()
-        }
     }
 
     private fun getLinesDataSet(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {

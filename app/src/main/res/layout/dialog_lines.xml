@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
+
+        <FrameLayout
+                android:id="@+id/btn_source_all_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/darker_gray">
+
+            <Button
+                    android:id="@+id/btn_source_all"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@drawable/bck_source_all"
+                    android:text="All"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+        <FrameLayout
+                android:id="@+id/btn_source_mobile_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+            <Button
+                    android:id="@+id/btn_source_mobile"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@drawable/bck_source_mobile"
+                    android:text="Mobile"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+        <FrameLayout
+                android:id="@+id/btn_source_wifi_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+            <Button
+                    android:id="@+id/btn_source_wifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@drawable/bck_source_wifi"
+                    android:text="Wifi"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp"
+            android:baselineAligned="false">
+
+        <FrameLayout
+                android:id="@+id/btn_state_all_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:color/darker_gray">
+
+            <Button
+                    android:id="@+id/btn_state_all"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@color/colorAll"
+                    android:text="All"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+        <FrameLayout
+                android:id="@+id/btn_state_foreground_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+            <Button
+                    android:id="@+id/btn_state_foreground"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@color/colorForeground"
+                    android:text="Foreground"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+        <FrameLayout
+                android:id="@+id/btn_state_background_back"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+            <Button
+                    android:id="@+id/btn_state_background"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="8dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@color/colorBackground"
+                    android:text="Background"
+                    tools:ignore="HardcodedText" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
