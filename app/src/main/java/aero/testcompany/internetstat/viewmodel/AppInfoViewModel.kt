@@ -39,7 +39,8 @@ class AppInfoViewModel : ViewModel() {
             GetPackageNetworkUseCase(
                 uid,
                 context,
-                networkStatsManager
+                networkStatsManager,
+                viewModelScope
             )
     }
 

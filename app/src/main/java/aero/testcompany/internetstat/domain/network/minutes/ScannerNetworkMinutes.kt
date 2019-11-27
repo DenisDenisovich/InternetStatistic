@@ -15,7 +15,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-
 class ScannerNetworkMinutes(private val context: Context) {
 
     private val job = Job()
@@ -64,12 +63,13 @@ class ScannerNetworkMinutes(private val context: Context) {
                 it.packageName,
                 packageUid.getUid(it.packageName),
                 context,
-                networkStartManager
+                networkStartManager,
+                scope
             )
         }
     }
 
-    private fun calculateMinuteNetwork() {
+    private suspend fun calculateMinuteNetwork() {
         // fill preview bytes if empty
         if (previewBytes.isEmpty()) {
             fillBytes(previewBytes)
@@ -91,7 +91,7 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
     }
 
-    private fun fillBytes(hashBytes: HashMap<String, BucketInfo>) {
+    private suspend fun fillBytes(hashBytes: HashMap<String, BucketInfo>) {
         hashBytes.clear()
         calculators.forEach {
             with(it.value) {

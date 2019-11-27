@@ -18,17 +18,19 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.*
 
 @TargetApi(Build.VERSION_CODES.M)
 open class GetPackageNetworkUseCase(
     val packageUid: Int,
     protected val context: Context,
-    protected val networkStatsManager: NetworkStatsManager
+    protected val networkStatsManager: NetworkStatsManager,
+    protected val myScope: CoroutineScope
 ) {
     protected lateinit var getTimeLineUseCase: GetTimeLineUseCase
     protected var bucketsList: ArrayList<BucketInfo> = arrayListOf()
 
-    open fun getInfo(interval: Long, period: NetworkPeriod): List<BucketInfo> {
+    open suspend fun getInfo(interval: Long, period: NetworkPeriod): List<BucketInfo> {
         if (period == NetworkPeriod.MINUTES) {
             throw Exception("For MINUTES period use GetPackageNetworkMinutesUseCase")
         }
@@ -40,37 +42,51 @@ open class GetPackageNetworkUseCase(
         for (timeIndex in 0 until timeLine.lastIndex) {
             startTime = timeLine[timeIndex]
             endTime = timeLine[timeIndex + 1]
+            val startTimeLog = System.currentTimeMillis()
             bucketsList.add(calculateBytes(startTime, endTime))
+            Log.d("LogTimeDiff", ((System.currentTimeMillis() - startTimeLog)).toString())
         }
         return bucketsList
     }
 
-    protected fun calculateBytes(startTime: Long, endTime: Long): BucketInfo =
+    protected suspend fun calculateBytes(startTime: Long, endTime: Long): BucketInfo =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val mobileForeground = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.MOBILE,
-                ApplicationState.FOREGROUND
-            )
-            val mobileBackground = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.MOBILE,
-                ApplicationState.BACKGROUND
-            )
-            val wifiForeground = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.WIFI,
-                ApplicationState.FOREGROUND
-            )
-            val wifiBackground = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.WIFI,
-                ApplicationState.BACKGROUND
-            )
+            val mF = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.MOBILE,
+                    ApplicationState.FOREGROUND
+                )
+            }
+            val mB = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.MOBILE,
+                    ApplicationState.BACKGROUND
+                )
+            }
+            val wF = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.WIFI,
+                    ApplicationState.FOREGROUND
+                )
+            }
+            val wB = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.WIFI,
+                    ApplicationState.BACKGROUND
+                )
+            }
+            val mobileForeground = mF.await()
+            val mobileBackground = mB.await()
+            val wifiForeground = wF.await()
+            val wifiBackground = wB.await()
             val allType = BucketSource(
                 mobile = BucketBytes(
                     mobileBackground.received + mobileForeground.received,
@@ -87,17 +103,21 @@ open class GetPackageNetworkUseCase(
                 BucketSource(mobileBackground, wifiBackground)
             )
         } else {
-            val mobileAll = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.MOBILE
-            )
-            val wifiAll = getNetworkBytes(
-                startTime,
-                endTime,
-                NetworkSource.WIFI
-            )
-            BucketInfo(BucketSource(mobileAll, wifiAll), null, null)
+            val mobileAll = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.MOBILE
+                )
+            }
+            val wifiAll = myScope.async {
+                getNetworkBytes(
+                    startTime,
+                    endTime,
+                    NetworkSource.WIFI
+                )
+            }
+            BucketInfo(BucketSource(mobileAll.await(), wifiAll.await()), null, null)
         }
 
     private fun getNetworkBytes(

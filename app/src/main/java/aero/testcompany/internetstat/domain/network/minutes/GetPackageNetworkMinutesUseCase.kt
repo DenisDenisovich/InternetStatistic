@@ -4,16 +4,18 @@ import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import android.app.usage.NetworkStatsManager
 import android.content.Context
+import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 class GetPackageNetworkMinutesUseCase(
     val packageName: String,
     packageUid: Int,
     context: Context,
-    networkStatsManager: NetworkStatsManager
-) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager) {
+    networkStatsManager: NetworkStatsManager,
+    myScope: CoroutineScope
+) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager, myScope) {
 
-    fun getLastMinutesInfo(): BucketInfo {
+    suspend fun getLastMinutesInfo(): BucketInfo {
         bucketsList.clear()
         val calendar = GregorianCalendar().apply {
             timeInMillis = System.currentTimeMillis()
