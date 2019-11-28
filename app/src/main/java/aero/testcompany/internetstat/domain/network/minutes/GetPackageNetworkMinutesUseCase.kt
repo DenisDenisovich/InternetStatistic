@@ -11,11 +11,10 @@ class GetPackageNetworkMinutesUseCase(
     val packageName: String,
     packageUid: Int,
     context: Context,
-    networkStatsManager: NetworkStatsManager,
-    myScope: CoroutineScope
-) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager, myScope) {
+    networkStatsManager: NetworkStatsManager
+) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager) {
 
-    suspend fun getLastMinutesInfo(): BucketInfo {
+    suspend fun getLastMinutesInfo(): BucketInfo? {
         bucketsList.clear()
         val calendar = GregorianCalendar().apply {
             timeInMillis = System.currentTimeMillis()
@@ -27,7 +26,9 @@ class GetPackageNetworkMinutesUseCase(
         calendar.add(Calendar.HOUR_OF_DAY, 3)
         val endTime = calendar.timeInMillis
         val minutesBytes = calculateBytes(startTime, endTime)
-        bucketsList.add(minutesBytes)
+        minutesBytes?.let {
+            bucketsList.add(minutesBytes)
+        }
         return minutesBytes
     }
 }

@@ -63,8 +63,7 @@ class ScannerNetworkMinutes(private val context: Context) {
                 it.packageName,
                 packageUid.getUid(it.packageName),
                 context,
-                networkStartManager,
-                scope
+                networkStartManager
             )
         }
     }
@@ -95,7 +94,9 @@ class ScannerNetworkMinutes(private val context: Context) {
         hashBytes.clear()
         calculators.forEach {
             with(it.value) {
-                hashBytes[packageName] = getLastMinutesInfo()
+                getLastMinutesInfo()?.let { bytes ->
+                    hashBytes[packageName] = bytes
+                }
             }
         }
     }

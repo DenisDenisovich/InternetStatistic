@@ -1,13 +1,9 @@
 package aero.testcompany.internetstat.view.fragments.appinfo
 
 import aero.testcompany.internetstat.R
-import aero.testcompany.internetstat.domain.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.*
 import aero.testcompany.internetstat.models.bucket.BucketInfo
-import aero.testcompany.internetstat.util.getNetworkData
-import aero.testcompany.internetstat.util.gone
-import aero.testcompany.internetstat.util.toMb
-import aero.testcompany.internetstat.util.visible
+import aero.testcompany.internetstat.util.*
 import aero.testcompany.internetstat.viewmodel.AppInfoViewModel
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -35,7 +31,6 @@ class AppInfoFragment : Fragment(),
     PeriodBottomSheetDialog.PeriodListener {
 
     private val df = SimpleDateFormat("MM.dd", Locale.getDefault())
-    private lateinit var networkInfo: NetworkInfo
     private lateinit var myPackageInfo: MyPackageInfo
     private var timeLine = arrayListOf<String>()
     private lateinit var viewModel: AppInfoViewModel
@@ -65,51 +60,53 @@ class AppInfoFragment : Fragment(),
         viewModel.totalTransmitted.observe(this, androidx.lifecycle.Observer {
             tv_transmitted.text = resources.getString(R.string.total_transmitted, it.toMb())
         })
-        viewModel.networkInfo.observe(this, androidx.lifecycle.Observer {
-            networkInfo = it
-            lines.clear()
-            networkReceivedLinesData.clearValues()
-            networkTransmittedLinesData.clearValues()
-            chart_received.apply {
-                fitScreen()
-                data?.clearValues()
-                xAxis?.valueFormatter = null
-                notifyDataSetChanged()
-                clear()
-                invalidate()
+        viewModel.timeLine.observe(this, androidx.lifecycle.Observer {
+            timeLine.clear()
+            it.forEach { timeStamp ->
+                timeLine.add(df.format(timeStamp))
             }
-            chart_transmitted.apply {
-                fitScreen()
-                data?.clearValues()
-                xAxis?.valueFormatter = null
-                notifyDataSetChanged()
-                clear()
-                invalidate()
+        })
+        viewModel.networkInfo.observe(this, androidx.lifecycle.Observer { buckets ->
+            if (progress.isVisible()) {
+                progress.gone()
             }
-            with(GetTimeLineUseCase(interval.getInterval(), period)) {
-                timeLine.clear()
-                getTimeLine().forEach { timeStamp ->
-                    timeLine.add(df.format(timeStamp))
+            if (group_chart.isGone()) {
+                initChart(BytesType.RECEIVED)
+                initChart(BytesType.TRANSMITTED)
+                group_chart.visible()
+            }
+            NetworkSource.values().forEach { source ->
+                ApplicationState.values().forEach { state ->
+                    BytesType.values().forEach { type ->
+                        updateDataSet(buckets, source, state, type)
+                    }
                 }
             }
-            fillChart(chart_received, networkInfo.buckets, BytesType.RECEIVED)
-            fillChart(chart_transmitted, networkInfo.buckets, BytesType.TRANSMITTED)
-            progress.gone()
-            group_chart.visible()
-
-            changeSelectedLines(BytesType.RECEIVED)
-            changeSelectedLines(BytesType.TRANSMITTED)
             networkReceivedLinesData.notifyDataChanged()
             networkTransmittedLinesData.notifyDataChanged()
             chart_transmitted.invalidate()
             chart_received.invalidate()
         })
+        // init lines
+        NetworkSource.values().forEach { source ->
+            ApplicationState.values().forEach { state ->
+                BytesType.values().forEach { type ->
+                    val dataSet = initLineDataSet(source, state)
+                    lines.add(NetworkLine(dataSet, source, state, type))
+                    getTypedDataSet(type).addDataSet(dataSet)
+                }
+            }
+        }
+        changeSelectedLines(BytesType.RECEIVED)
+        changeSelectedLines(BytesType.TRANSMITTED)
+
         iv_icon.setImageDrawable(
             requireContext().packageManager.getApplicationIcon(myPackageInfo.packageName)
         )
         tv_name.text = myPackageInfo.name
         tv_package.text = myPackageInfo.packageName
         viewModel.update(interval, period)
+
         btn_received_lines.setOnClickListener(this)
         btn_transmitted_lines.setOnClickListener(this)
         btn_period.setOnClickListener(this)
@@ -136,14 +133,18 @@ class AppInfoFragment : Fragment(),
 
     override fun changePeriodAndInterval(period: NetworkPeriod, interval: NetworkInterval) {
         if (period == NetworkPeriod.MINUTES) {
-            Toast.makeText(requireContext(), "Minutes doesn't support now", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                requireContext(),
+                "Minutes doesn't support now", Toast.LENGTH_LONG
+            ).show()
             return
         }
         this.period = period
         this.interval = interval
-        viewModel.update(interval, period)
+        clearGraphs()
         progress.visible()
         group_chart.gone()
+        viewModel.update(interval, period)
     }
 
     override fun onSourceSelected(bytesType: BytesType, sources: ArrayList<NetworkSource>) {
@@ -176,16 +177,12 @@ class AppInfoFragment : Fragment(),
         chart_transmitted.invalidate()
     }
 
-    private fun fillChart(chart: LineChart, networkData: List<BucketInfo>, bytesType: BytesType) {
-        chart.setTouchEnabled(true)
-        chart.setPinchZoom(true)
-        NetworkSource.values().forEach { source ->
-            ApplicationState.values().forEach { state ->
-                addDataSet(networkData, source, state, bytesType)
-            }
-        }
+    private fun initChart(bytesType: BytesType) {
+        val chart = if (bytesType == BytesType.RECEIVED) chart_received else chart_transmitted
         chart.apply {
-            data = getLinesDataSet(bytesType)
+            setTouchEnabled(true)
+            setPinchZoom(true)
+            data = getTypedDataSet(bytesType)
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
@@ -200,15 +197,10 @@ class AppInfoFragment : Fragment(),
         }
     }
 
-    private fun getLineDataSet(
-        values: List<Long>,
+    private fun initLineDataSet(
         source: NetworkSource,
         state: ApplicationState
     ): LineDataSet {
-        val lineValues: ArrayList<Entry> = arrayListOf()
-        for (index in values.indices) {
-            lineValues.add(Entry(index.toFloat(), values[index].toMb().toFloat()))
-        }
         val graphColor = when (state) {
             ApplicationState.ALL -> R.color.colorAll
             ApplicationState.FOREGROUND -> R.color.colorForeground
@@ -228,7 +220,7 @@ class AppInfoFragment : Fragment(),
             ApplicationState.FOREGROUND -> R.drawable.fade_foreground
             ApplicationState.BACKGROUND -> R.drawable.fade_background
         }
-        return LineDataSet(lineValues, "").apply {
+        return LineDataSet(mutableListOf(), "").apply {
             setDrawIcons(false)
             graphLine?.let {
                 enableDashedLine(it.first, it.second, it.third)
@@ -254,43 +246,65 @@ class AppInfoFragment : Fragment(),
         }
     }
 
-    private fun addDataSet(
+    private fun updateDataSet(
         data: List<BucketInfo>,
         source: NetworkSource,
         state: ApplicationState,
         bytesType: BytesType
     ) {
-        data.getNetworkData(source, state, bytesType)
-            ?.let { networkData ->
-                val dataSet = getLineDataSet(networkData, source, state)
-                lines.add(
-                    NetworkLine(
-                        dataSet,
-                        source,
-                        state,
-                        bytesType
-                    )
-                )
-                getLinesDataSet(bytesType).addDataSet(dataSet)
-            }
+        data.getNetworkData(source, state, bytesType)?.let { networkData ->
+            lines.filter { it.source == source && it.state == state && it.bytesType == bytesType }
+                .getOrNull(0)?.line
+                ?.let { currentDataSet ->
+                    for (index in networkData.indices) {
+                        currentDataSet.addEntry(
+                            Entry(index.toFloat(), networkData[index].toMb().toFloat())
+                        )
+                    }
+                }
+        }
     }
 
     private fun changeSelectedLines(byteType: BytesType) {
         val sources = if (byteType == BytesType.RECEIVED) sourcesReceived else sourcesTransmitted
         val states = if (byteType == BytesType.RECEIVED) statesReceived else statesTransmitted
         lines.filter { it.bytesType == byteType }
-            .forEach { getLinesDataSet(byteType).removeDataSet(it.line) }
+            .forEach { getTypedDataSet(byteType).removeDataSet(it.line) }
         lines.filter {
             it.bytesType == byteType &&
                 sources.contains(it.source) &&
                 states.contains(it.state)
-        }.forEach { getLinesDataSet(byteType).addDataSet(it.line) }
+        }.forEach { getTypedDataSet(byteType).addDataSet(it.line) }
     }
 
-    private fun getLinesDataSet(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {
+    private fun getTypedDataSet(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {
         networkReceivedLinesData
     } else {
         networkTransmittedLinesData
+    }
+
+    private fun clearGraphs() {
+        lines.clear()
+        networkReceivedLinesData.clearValues()
+        networkTransmittedLinesData.clearValues()
+        chart_received.apply {
+            fitScreen()
+            data?.clearValues()
+            xAxis?.valueFormatter = null
+            notifyDataSetChanged()
+            clear()
+            invalidate()
+        }
+        chart_transmitted.apply {
+            fitScreen()
+            data?.clearValues()
+            xAxis?.valueFormatter = null
+            notifyDataSetChanged()
+            clear()
+            invalidate()
+        }
+        progress.visible()
+        group_chart.gone()
     }
 
     class NetworkLine(
@@ -310,5 +324,3 @@ class AppInfoFragment : Fragment(),
             }
     }
 }
-
-
