@@ -54,25 +54,21 @@ open class GetPackageNetworkUseCase(
         workScope?.launch {
             val buckets: ArrayList<BucketInfo> = arrayListOf()
             bucketsList.clear()
-
             var startTime: Long
             var endTime: Long
-            for (timeIndex in 0 until timeLine.lastIndex) {
-                startTime = timeLine[timeIndex]
-                endTime = timeLine[timeIndex + 1]
+            for (timeIndex in timeLine.lastIndex downTo 1) {
+                startTime = timeLine[timeIndex - 1]
+                endTime = timeLine[timeIndex]
                 calculateBytes(startTime, endTime)?.let {
                     buckets.add(it)
                 }
-                Log.d("LogThread", "${Thread.currentThread()}")
                 if (buckets.size == 50) {
-                    Log.d("LogThread", "update ${Thread.currentThread()}")
                     val newDataPart = ArrayList(buckets)
                     bucketLiveData.postValue(newDataPart)
                     bucketsList.addAll(newDataPart)
                     buckets.clear()
                 }
             }
-            Log.d("LogThread", "${Thread.currentThread()}")
             val newDataPart = ArrayList(buckets)
             bucketLiveData.postValue(newDataPart)
             bucketsList.addAll(newDataPart)

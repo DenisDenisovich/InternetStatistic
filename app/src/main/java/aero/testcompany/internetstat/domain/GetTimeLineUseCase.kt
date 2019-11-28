@@ -12,7 +12,7 @@ class GetTimeLineUseCase(private val interval: Long, private val period: Network
         var endTime = getEndTime(calendar, startTime, period)
         timeLine.add(startTime)
         timeLine.add(endTime)
-        for (i in 0..interval / period.getStep() + 1) {
+        for (i in 0 until interval / period.getStep()) {
             startTime = endTime
             endTime = getEndTime(calendar, startTime, period)
             timeLine.add(endTime)

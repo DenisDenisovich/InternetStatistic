@@ -23,6 +23,7 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import java.text.SimpleDateFormat
 import com.github.mikephil.charting.formatter.ValueFormatter
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -85,7 +86,9 @@ class AppInfoFragment : Fragment(),
             }
             networkReceivedLinesData.notifyDataChanged()
             networkTransmittedLinesData.notifyDataChanged()
+            chart_transmitted.notifyDataSetChanged()
             chart_transmitted.invalidate()
+            chart_received.notifyDataSetChanged()
             chart_received.invalidate()
         })
         // init lines
@@ -188,7 +191,6 @@ class AppInfoFragment : Fragment(),
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String {
-                        Log.d("LogData", "value: $value, time: ${timeLine[value.toInt()]}")
                         return timeLine[value.toInt()]
                     }
                 }
@@ -258,13 +260,10 @@ class AppInfoFragment : Fragment(),
             lines.filter { it.source == source && it.state == state && it.bytesType == bytesType }
                 .getOrNull(0)?.line
                 ?.let { currentDataSet ->
-                    val lastIndex = currentDataSet.values.size
-                    for (index in networkData.indices) {
-                        currentDataSet.addEntry(
-                            Entry(
-                                (lastIndex + index).toFloat(),
-                                networkData[index].toMb().toFloat()
-                            )
+                    val lastIndex = timeLine.lastIndex - currentDataSet.values.size - 1
+                    networkData.forEachIndexed { index, bytes ->
+                        currentDataSet.addEntryOrdered(
+                            Entry((lastIndex - index).toFloat(), bytes.toMb().toFloat())
                         )
                     }
                 }
@@ -290,15 +289,16 @@ class AppInfoFragment : Fragment(),
     }
 
     private fun clearGraphs() {
-        lines.clear()
-        networkReceivedLinesData.clearValues()
-        networkTransmittedLinesData.clearValues()
+        lines.forEach {
+            it.line.clear()
+        }
+        //networkReceivedLinesData.notifyDataChanged()
+        //networkTransmittedLinesData.notifyDataChanged()
         chart_received.apply {
             fitScreen()
             data?.clearValues()
             xAxis?.valueFormatter = null
             notifyDataSetChanged()
-            clear()
             invalidate()
         }
         chart_transmitted.apply {
@@ -306,7 +306,6 @@ class AppInfoFragment : Fragment(),
             data?.clearValues()
             xAxis?.valueFormatter = null
             notifyDataSetChanged()
-            clear()
             invalidate()
         }
         progress.visible()
