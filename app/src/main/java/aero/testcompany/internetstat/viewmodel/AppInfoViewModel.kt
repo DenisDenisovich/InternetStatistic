@@ -9,10 +9,7 @@ import aero.testcompany.internetstat.models.bucket.BucketInfo
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import androidx.lifecycle.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class AppInfoViewModel : ViewModel() {
 
@@ -62,7 +59,7 @@ class AppInfoViewModel : ViewModel() {
                 buckets = packageNetworkUseCase.setup(
                     interval.getInterval(),
                     period,
-                    this@launch
+                    this@launch + Dispatchers.Default
                 )
                 timeLine.postValue(packageNetworkUseCase.timeLine)
             }

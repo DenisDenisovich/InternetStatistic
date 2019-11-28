@@ -28,7 +28,7 @@ open class GetPackageNetworkUseCase(
     protected val networkStatsManager: NetworkStatsManager
 ) {
     var timeLine: List<Long> = listOf()
-    private set
+        private set
     protected var workScope: CoroutineScope? = null
     protected lateinit var getTimeLineUseCase: GetTimeLineUseCase
     protected var bucketsList: ArrayList<BucketInfo> = arrayListOf()
@@ -63,13 +63,16 @@ open class GetPackageNetworkUseCase(
                 calculateBytes(startTime, endTime)?.let {
                     buckets.add(it)
                 }
+                Log.d("LogThread", "${Thread.currentThread()}")
                 if (buckets.size == 50) {
+                    Log.d("LogThread", "update ${Thread.currentThread()}")
                     val newDataPart = ArrayList(buckets)
                     bucketLiveData.postValue(newDataPart)
                     bucketsList.addAll(newDataPart)
                     buckets.clear()
                 }
             }
+            Log.d("LogThread", "${Thread.currentThread()}")
             val newDataPart = ArrayList(buckets)
             bucketLiveData.postValue(newDataPart)
             bucketsList.addAll(newDataPart)
@@ -231,10 +234,10 @@ open class GetPackageNetworkUseCase(
         Log.d(
             "LogTime",
             "$state, $source, " +
-                "start: " + "${bucket.startTimeStamp.getFullDate()}, " +
-                "end: ${bucket.endTimeStamp.getFullDate()}, " +
-                "rx: ${bucket.rxBytes}, " +
-                "tx: ${bucket.txBytes}"
+                    "start: " + "${bucket.startTimeStamp.getFullDate()}, " +
+                    "end: ${bucket.endTimeStamp.getFullDate()}, " +
+                    "rx: ${bucket.rxBytes}, " +
+                    "tx: ${bucket.txBytes}"
         )
     }
 }

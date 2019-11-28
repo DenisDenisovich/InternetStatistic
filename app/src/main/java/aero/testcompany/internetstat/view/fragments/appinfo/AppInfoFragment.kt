@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_application_info.*
 import com.github.mikephil.charting.data.LineData
 import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.github.mikephil.charting.charts.LineChart
@@ -187,6 +188,7 @@ class AppInfoFragment : Fragment(),
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String {
+                        Log.d("LogData", "value: $value, time: ${timeLine[value.toInt()]}")
                         return timeLine[value.toInt()]
                     }
                 }
@@ -256,9 +258,13 @@ class AppInfoFragment : Fragment(),
             lines.filter { it.source == source && it.state == state && it.bytesType == bytesType }
                 .getOrNull(0)?.line
                 ?.let { currentDataSet ->
+                    val lastIndex = currentDataSet.values.size
                     for (index in networkData.indices) {
                         currentDataSet.addEntry(
-                            Entry(index.toFloat(), networkData[index].toMb().toFloat())
+                            Entry(
+                                (lastIndex + index).toFloat(),
+                                networkData[index].toMb().toFloat()
+                            )
                         )
                     }
                 }
@@ -272,8 +278,8 @@ class AppInfoFragment : Fragment(),
             .forEach { getTypedDataSet(byteType).removeDataSet(it.line) }
         lines.filter {
             it.bytesType == byteType &&
-                sources.contains(it.source) &&
-                states.contains(it.state)
+                    sources.contains(it.source) &&
+                    states.contains(it.state)
         }.forEach { getTypedDataSet(byteType).addDataSet(it.line) }
     }
 
