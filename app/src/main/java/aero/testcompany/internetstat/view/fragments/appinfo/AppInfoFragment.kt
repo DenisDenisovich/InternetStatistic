@@ -68,6 +68,13 @@ class AppInfoFragment : Fragment(),
             }
         })
         viewModel.networkInfo.observe(this, androidx.lifecycle.Observer { buckets ->
+            NetworkSource.values().forEach { source ->
+                ApplicationState.values().forEach { state ->
+                    BytesType.values().forEach { type ->
+                        updateDataSet(buckets, source, state, type)
+                    }
+                }
+            }
             if (progress.isVisible()) {
                 progress.gone()
             }
@@ -76,16 +83,6 @@ class AppInfoFragment : Fragment(),
                 initChart(BytesType.TRANSMITTED)
                 group_chart.visible()
             }
-            updateDataSet(buckets, NetworkSource.ALL, ApplicationState.ALL, BytesType.RECEIVED)
-/*
-            NetworkSource.values().forEach { source ->
-                ApplicationState.values().forEach { state ->
-                    BytesType.values().forEach { type ->
-                        updateDataSet(buckets, source, state, type)
-                    }
-                }
-            }
-*/
             updateGraph()
         })
         // init lines
@@ -184,13 +181,7 @@ class AppInfoFragment : Fragment(),
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
-                    override fun getFormattedValue(value: Float): String {
-                        return try {
-                            timeLine[value.toInt()]
-                        } catch (e: Exception) {
-                            "error"
-                        }
-                    }
+                    override fun getFormattedValue(value: Float): String = timeLine[value.toInt()]
                 }
                 granularity = 1f
             }
@@ -264,6 +255,7 @@ class AppInfoFragment : Fragment(),
                         Entry((lastIndex - index).toFloat(), bytes.toMb().toFloat())
                     )
                 }
+                currentDataSet.notifyDataSetChanged()
             }
         }
     }
@@ -272,12 +264,9 @@ class AppInfoFragment : Fragment(),
         val sources = if (byteType == BytesType.RECEIVED) sourcesReceived else sourcesTransmitted
         val states = if (byteType == BytesType.RECEIVED) statesReceived else statesTransmitted
         // remove all lines from chart
-        lines.filter { it.bytesType == byteType }
-            .forEach { getLineData(byteType).removeDataSet(it.line) }
+        lines.filter(byteType).forEach { getLineData(byteType).removeDataSet(it.line) }
         // add only selected lines
-        lines.filter {
-            it.bytesType == byteType && sources.contains(it.source) && states.contains(it.state)
-        }.forEach { getLineData(byteType).addDataSet(it.line) }
+        lines.filter(sources, states, byteType).forEach { getLineData(byteType).addDataSet(it.line) }
     }
 
     private fun getLineData(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {
@@ -296,6 +285,7 @@ class AppInfoFragment : Fragment(),
             data?.clearValues()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
+            notifyDataSetChanged()
             invalidate()
         }
         chart_transmitted.apply {
@@ -303,6 +293,7 @@ class AppInfoFragment : Fragment(),
             data?.clearValues()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
+            notifyDataSetChanged()
             invalidate()
         }
         updateLineData(BytesType.RECEIVED)
@@ -316,17 +307,19 @@ class AppInfoFragment : Fragment(),
     private fun updateGraph() {
         networkReceivedLinesData.notifyDataChanged()
         networkTransmittedLinesData.notifyDataChanged()
-        chart_transmitted.notifyDataSetChanged()
-        chart_transmitted.invalidate()
-        chart_received.notifyDataSetChanged()
-        chart_received.invalidate()
+        chart_transmitted?.apply {
+            xAxis.mAxisMinimum = networkTransmittedLinesData.xMin
+            xAxis.mAxisMaximum = networkTransmittedLinesData.xMax
+            notifyDataSetChanged()
+            invalidate()
+        }
+        chart_received?.apply {
+            xAxis.mAxisMaximum = networkReceivedLinesData.xMax
+            xAxis.mAxisMinimum = networkReceivedLinesData.xMin
+            notifyDataSetChanged()
+            invalidate()
+        }
     }
-
-    private fun ArrayList<NetworkLine>.filter(
-        source: NetworkSource,
-        state: ApplicationState,
-        bytesType: BytesType
-    ) = filter { it.source == source && it.state == state && it.bytesType == bytesType }
 
     class NetworkLine(
         val line: LineDataSet,
@@ -334,6 +327,24 @@ class AppInfoFragment : Fragment(),
         val state: ApplicationState,
         val bytesType: BytesType
     )
+
+    fun ArrayList<NetworkLine>.filter(
+        source: NetworkSource,
+        state: ApplicationState,
+        bytesType: BytesType
+    ) = filter { it.source == source && it.state == state && it.bytesType == bytesType }
+
+    fun ArrayList<NetworkLine>.filter(bytesType: BytesType) = filter { it.bytesType == bytesType }
+
+    fun ArrayList<NetworkLine>.filter(
+        sources: ArrayList<NetworkSource>,
+        states: ArrayList<ApplicationState>,
+        bytesType: BytesType
+    ) = filter {
+        it.bytesType == bytesType &&
+            sources.contains(it.source) &&
+            states.contains(it.state)
+    }
 
     companion object {
         private const val INFO_KEY = "key"
