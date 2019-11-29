@@ -86,6 +86,7 @@ class AppInfoFragment : Fragment(),
             updateGraph()
         })
         // init lines
+        lines.clear()
         NetworkSource.values().forEach { source ->
             ApplicationState.values().forEach { state ->
                 BytesType.values().forEach { type ->
@@ -95,8 +96,8 @@ class AppInfoFragment : Fragment(),
                 }
             }
         }
-        updateLineData(BytesType.RECEIVED)
-        updateLineData(BytesType.TRANSMITTED)
+        changeLinesVisibility(BytesType.RECEIVED)
+        changeLinesVisibility(BytesType.TRANSMITTED)
 
         iv_icon.setImageDrawable(
             requireContext().packageManager.getApplicationIcon(myPackageInfo.packageName)
@@ -153,7 +154,7 @@ class AppInfoFragment : Fragment(),
             sourcesTransmitted.clear()
             sourcesTransmitted.addAll(sources)
         }
-        updateLineData(bytesType)
+        changeLinesVisibility(bytesType)
         updateGraph()
     }
 
@@ -165,16 +166,14 @@ class AppInfoFragment : Fragment(),
             statesTransmitted.clear()
             statesTransmitted.addAll(states)
         }
-        updateLineData(bytesType)
-        networkReceivedLinesData.notifyDataChanged()
-        networkTransmittedLinesData.notifyDataChanged()
-        chart_received.invalidate()
-        chart_transmitted.invalidate()
+        changeLinesVisibility(bytesType)
+        updateGraph()
     }
 
     private fun initChart(bytesType: BytesType) {
         val chart = if (bytesType == BytesType.RECEIVED) chart_received else chart_transmitted
         chart.apply {
+            fitScreen()
             setTouchEnabled(true)
             setPinchZoom(true)
             data = getLineData(bytesType)
@@ -249,7 +248,7 @@ class AppInfoFragment : Fragment(),
         val currentDataSet = lines.filter(source, state, bytesType).getOrNull(0)?.line
         networkData?.let {
             currentDataSet?.let {
-                val lastIndex = timeLine.lastIndex - currentDataSet.values.size - 1
+                val lastIndex = timeLine.lastIndex - currentDataSet.values.size
                 networkData.forEachIndexed { index, bytes ->
                     currentDataSet.addEntryOrdered(
                         Entry((lastIndex - index).toFloat(), bytes.toMb().toFloat())
@@ -260,13 +259,14 @@ class AppInfoFragment : Fragment(),
         }
     }
 
-    private fun updateLineData(byteType: BytesType) {
+    private fun changeLinesVisibility(byteType: BytesType) {
         val sources = if (byteType == BytesType.RECEIVED) sourcesReceived else sourcesTransmitted
         val states = if (byteType == BytesType.RECEIVED) statesReceived else statesTransmitted
         // remove all lines from chart
         lines.filter(byteType).forEach { getLineData(byteType).removeDataSet(it.line) }
         // add only selected lines
-        lines.filter(sources, states, byteType).forEach { getLineData(byteType).addDataSet(it.line) }
+        lines.filter(sources, states, byteType)
+            .forEach { getLineData(byteType).addDataSet(it.line) }
     }
 
     private fun getLineData(bytesType: BytesType) = if (bytesType == BytesType.RECEIVED) {
@@ -277,11 +277,13 @@ class AppInfoFragment : Fragment(),
 
     private fun clearGraphs() {
         lines.forEach {
-            it.line.clear()
+            val currentDataSet = it.line
+            repeat(it.line.entryCount) {
+                currentDataSet.removeLast()
+            }
             it.line.notifyDataSetChanged()
         }
         chart_received.apply {
-            fitScreen()
             data?.clearValues()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
@@ -289,15 +291,14 @@ class AppInfoFragment : Fragment(),
             invalidate()
         }
         chart_transmitted.apply {
-            fitScreen()
             data?.clearValues()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
             notifyDataSetChanged()
             invalidate()
         }
-        updateLineData(BytesType.RECEIVED)
-        updateLineData(BytesType.TRANSMITTED)
+        changeLinesVisibility(BytesType.RECEIVED)
+        changeLinesVisibility(BytesType.TRANSMITTED)
         networkReceivedLinesData.notifyDataChanged()
         networkTransmittedLinesData.notifyDataChanged()
         progress.visible()
@@ -308,14 +309,10 @@ class AppInfoFragment : Fragment(),
         networkReceivedLinesData.notifyDataChanged()
         networkTransmittedLinesData.notifyDataChanged()
         chart_transmitted?.apply {
-            xAxis.mAxisMinimum = networkTransmittedLinesData.xMin
-            xAxis.mAxisMaximum = networkTransmittedLinesData.xMax
             notifyDataSetChanged()
             invalidate()
         }
         chart_received?.apply {
-            xAxis.mAxisMaximum = networkReceivedLinesData.xMax
-            xAxis.mAxisMinimum = networkReceivedLinesData.xMin
             notifyDataSetChanged()
             invalidate()
         }
