@@ -1,10 +1,13 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
+import aero.testcompany.internetstat.data.db.NetworkDatabase
+import aero.testcompany.internetstat.data.db.NetworkEntity
 import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.minus
+import aero.testcompany.internetstat.view.App
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.util.Log
@@ -17,17 +20,20 @@ import kotlin.collections.HashMap
 
 class ScannerNetworkMinutes(private val context: Context) {
 
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
+    private val db = App.db
 
+    private val job = Job()
+
+    private val scope = CoroutineScope(Dispatchers.Default + job)
     private val networkStartManager =
         context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
     private val calculators: HashMap<String, GetPackageNetworkMinutesUseCase> = HashMap()
     private val packagesList = GetPackagesUseCase(context.packageManager)
-    private val packageUid = GetPackageUidUseCase(context)
 
+    private val packageUid = GetPackageUidUseCase(context)
     private val previewBytes: HashMap<String, BucketInfo> = HashMap()
     private val nextBytes: HashMap<String, BucketInfo> = HashMap()
+
     private val minuteBytes: HashMap<String, BucketInfo> = HashMap()
 
     fun start() {
@@ -99,6 +105,9 @@ class ScannerNetworkMinutes(private val context: Context) {
                 }
             }
         }
+    }
+
+    private fun writeToDb() {
     }
 
     private fun log() {

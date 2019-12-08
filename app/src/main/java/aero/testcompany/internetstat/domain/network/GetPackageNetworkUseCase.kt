@@ -27,7 +27,7 @@ open class GetPackageNetworkUseCase(
     protected val context: Context,
     protected val networkStatsManager: NetworkStatsManager
 ) {
-    var timeLine: List<Long> = listOf()
+    var timeLine: ArrayList<Long> = arrayListOf()
         private set
     protected var workScope: CoroutineScope? = null
     protected lateinit var getTimeLineUseCase: GetTimeLineUseCase
@@ -46,7 +46,7 @@ open class GetPackageNetworkUseCase(
         workScope = scope
         bucketLiveData = MutableLiveData()
         getTimeLineUseCase = GetTimeLineUseCase(interval, period)
-        timeLine = getTimeLineUseCase.getTimeLine()
+        timeLine = ArrayList(getTimeLineUseCase.getTimeLine())
         return bucketLiveData
     }
 

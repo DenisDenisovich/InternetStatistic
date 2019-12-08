@@ -4,8 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-data class MinutesData(
-    @PrimaryKey val uid: Int,
-    val time: Long,
-    val data: String
+data class ApplicationEntity(
+    @PrimaryKey(autoGenerate = true) val uid: Long = 0,
+    val name: String
 )
