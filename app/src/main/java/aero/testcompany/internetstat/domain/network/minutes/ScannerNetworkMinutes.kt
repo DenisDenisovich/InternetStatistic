@@ -46,11 +46,11 @@ class ScannerNetworkMinutes(private val context: Context) {
             val calcWorks = ArrayList<Deferred<Pair<Long, Long>>>()
             while (isActive) {
                 calcWorks.clear()
-                withContext(Dispatchers.Default) {
-                    updateCalculatorsList()
-                    calculateMinuteNetwork()
+                updateCalculatorsList()
+                calculateMinuteNetwork()
+                withContext(Dispatchers.Main) {
+                    log()
                 }
-                log()
                 delay(1000 * 60)
             }
         }
@@ -94,7 +94,7 @@ class ScannerNetworkMinutes(private val context: Context) {
         hashBytes.clear()
         calculators.forEach {
             with(it.value) {
-                getLastMinutesInfo()?.let { bytes ->
+                getLastMinutesInfo(scope)?.let { bytes ->
                     hashBytes[packageName] = bytes
                 }
             }

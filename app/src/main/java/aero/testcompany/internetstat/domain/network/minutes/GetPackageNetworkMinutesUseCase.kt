@@ -14,7 +14,8 @@ class GetPackageNetworkMinutesUseCase(
     networkStatsManager: NetworkStatsManager
 ) : GetPackageNetworkUseCase(packageUid, context, networkStatsManager) {
 
-    suspend fun getLastMinutesInfo(): BucketInfo? {
+    suspend fun getLastMinutesInfo(scope: CoroutineScope): BucketInfo? {
+        workScope = scope
         bucketsList.clear()
         val calendar = GregorianCalendar().apply {
             timeInMillis = System.currentTimeMillis()
