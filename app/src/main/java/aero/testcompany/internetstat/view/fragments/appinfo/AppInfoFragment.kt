@@ -19,7 +19,6 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
-import java.lang.Exception
 import kotlin.collections.ArrayList
 
 class AppInfoFragment : Fragment(),
