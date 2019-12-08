@@ -2,7 +2,6 @@ package aero.testcompany.internetstat.view.fragments.appinfo
 
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.models.*
-import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.*
 import aero.testcompany.internetstat.viewmodel.AppInfoViewModel
 import android.os.Bundle
@@ -10,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.fragment_application_info.*
 import com.github.mikephil.charting.data.LineData
@@ -20,10 +18,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.github.mikephil.charting.components.XAxis
-import java.text.SimpleDateFormat
 import com.github.mikephil.charting.formatter.ValueFormatter
 import java.lang.Exception
-import java.util.*
 import kotlin.collections.ArrayList
 
 class AppInfoFragment : Fragment(),
@@ -31,15 +27,13 @@ class AppInfoFragment : Fragment(),
     LinesBottomSheetDialog.OnGraphSelected,
     PeriodBottomSheetDialog.PeriodListener {
 
-    private val df = SimpleDateFormat("MM.dd", Locale.getDefault())
     private lateinit var myPackageInfo: MyPackageInfo
-    private var timeLine = arrayListOf<String>()
     private lateinit var viewModel: AppInfoViewModel
     private var interval = NetworkInterval.TWO_MONTH
     private var period = NetworkPeriod.DAY
-    private val lines = arrayListOf<NetworkLine>()
-    private val networkReceivedLinesData = LineData()
-    private val networkTransmittedLinesData = LineData()
+    private var lines = NetworkLinesList()
+    private var networkReceivedLinesData = LineData()
+    private var networkTransmittedLinesData = LineData()
     private val sourcesTransmitted = arrayListOf(NetworkSource.ALL)
     private val statesTransmitted = arrayListOf(ApplicationState.ALL)
     private val sourcesReceived = arrayListOf(NetworkSource.ALL)
@@ -62,42 +56,37 @@ class AppInfoFragment : Fragment(),
             tv_transmitted.text = resources.getString(R.string.total_transmitted, it.toMb())
         })
         viewModel.timeLine.observe(this, androidx.lifecycle.Observer {
-            timeLine.clear()
-            it.forEach { timeStamp ->
-                timeLine.add(df.format(timeStamp))
-            }
+            lines.setTimeLine(it)
         })
         viewModel.networkInfo.observe(this, androidx.lifecycle.Observer { buckets ->
-            NetworkSource.values().forEach { source ->
-                ApplicationState.values().forEach { state ->
-                    BytesType.values().forEach { type ->
-                        updateDataSet(buckets, source, state, type)
-                    }
-                }
-            }
             if (progress.isVisible()) {
                 progress.gone()
             }
             if (group_chart.isGone()) {
+                NetworkSource.values().forEach { source ->
+                    ApplicationState.values().forEach { state ->
+                        BytesType.values().forEach { type ->
+                            val dataSet = initLineDataSet(source, state)
+                            lines.add(NetworkLine(dataSet, source, state, type))
+                            getLineData(type).addDataSet(dataSet)
+                        }
+                    }
+                }
+                changeLinesVisibility(BytesType.RECEIVED)
+                changeLinesVisibility(BytesType.TRANSMITTED)
                 initChart(BytesType.RECEIVED)
                 initChart(BytesType.TRANSMITTED)
                 group_chart.visible()
             }
-            updateGraph()
-        })
-        // init lines
-        lines.clear()
-        NetworkSource.values().forEach { source ->
-            ApplicationState.values().forEach { state ->
-                BytesType.values().forEach { type ->
-                    val dataSet = initLineDataSet(source, state)
-                    lines.add(NetworkLine(dataSet, source, state, type))
-                    getLineData(type).addDataSet(dataSet)
+            NetworkSource.values().forEach { source ->
+                ApplicationState.values().forEach { state ->
+                    BytesType.values().forEach { type ->
+                        lines.updateDataSet(buckets, source, state, type)
+                    }
                 }
             }
-        }
-        changeLinesVisibility(BytesType.RECEIVED)
-        changeLinesVisibility(BytesType.TRANSMITTED)
+            updateGraph()
+        })
 
         iv_icon.setImageDrawable(
             requireContext().packageManager.getApplicationIcon(myPackageInfo.packageName)
@@ -180,7 +169,14 @@ class AppInfoFragment : Fragment(),
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
-                    override fun getFormattedValue(value: Float): String = timeLine[value.toInt()]
+                    override fun getFormattedValue(value: Float): String {
+                        val result = lines.timeLine.getOrNull(value.toInt()) ?: "error"
+                        Log.d(
+                            "logFormatter",
+                            "size: ${lines.timeLine.size}, value: $value, result: $result"
+                        )
+                        return result
+                    }
                 }
                 granularity = 1f
             }
@@ -238,27 +234,6 @@ class AppInfoFragment : Fragment(),
         }
     }
 
-    private fun updateDataSet(
-        data: List<BucketInfo>,
-        source: NetworkSource,
-        state: ApplicationState,
-        bytesType: BytesType
-    ) {
-        val networkData = data.getNetworkData(source, state, bytesType)
-        val currentDataSet = lines.filter(source, state, bytesType).getOrNull(0)?.line
-        networkData?.let {
-            currentDataSet?.let {
-                val lastIndex = timeLine.lastIndex - currentDataSet.values.size
-                networkData.forEachIndexed { index, bytes ->
-                    currentDataSet.addEntryOrdered(
-                        Entry((lastIndex - index).toFloat(), bytes.toMb().toFloat())
-                    )
-                }
-                currentDataSet.notifyDataSetChanged()
-            }
-        }
-    }
-
     private fun changeLinesVisibility(byteType: BytesType) {
         val sources = if (byteType == BytesType.RECEIVED) sourcesReceived else sourcesTransmitted
         val states = if (byteType == BytesType.RECEIVED) statesReceived else statesTransmitted
@@ -276,29 +251,25 @@ class AppInfoFragment : Fragment(),
     }
 
     private fun clearGraphs() {
-        lines.forEach {
-            val currentDataSet = it.line
-            repeat(it.line.entryCount) {
-                currentDataSet.removeLast()
-            }
-            it.line.notifyDataSetChanged()
-        }
+        lines = NetworkLinesList()
+        networkReceivedLinesData = LineData()
+        networkTransmittedLinesData = LineData()
+        changeLinesVisibility(BytesType.RECEIVED)
+        changeLinesVisibility(BytesType.TRANSMITTED)
         chart_received.apply {
-            data?.clearValues()
+            data = LineData()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
             notifyDataSetChanged()
             invalidate()
         }
         chart_transmitted.apply {
-            data?.clearValues()
+            data = LineData()
             data?.notifyDataChanged()
             xAxis?.valueFormatter = null
             notifyDataSetChanged()
             invalidate()
         }
-        changeLinesVisibility(BytesType.RECEIVED)
-        changeLinesVisibility(BytesType.TRANSMITTED)
         networkReceivedLinesData.notifyDataChanged()
         networkTransmittedLinesData.notifyDataChanged()
         progress.visible()
@@ -316,31 +287,6 @@ class AppInfoFragment : Fragment(),
             notifyDataSetChanged()
             invalidate()
         }
-    }
-
-    class NetworkLine(
-        val line: LineDataSet,
-        val source: NetworkSource,
-        val state: ApplicationState,
-        val bytesType: BytesType
-    )
-
-    fun ArrayList<NetworkLine>.filter(
-        source: NetworkSource,
-        state: ApplicationState,
-        bytesType: BytesType
-    ) = filter { it.source == source && it.state == state && it.bytesType == bytesType }
-
-    fun ArrayList<NetworkLine>.filter(bytesType: BytesType) = filter { it.bytesType == bytesType }
-
-    fun ArrayList<NetworkLine>.filter(
-        sources: ArrayList<NetworkSource>,
-        states: ArrayList<ApplicationState>,
-        bytesType: BytesType
-    ) = filter {
-        it.bytesType == bytesType &&
-            sources.contains(it.source) &&
-            states.contains(it.state)
     }
 
     companion object {
