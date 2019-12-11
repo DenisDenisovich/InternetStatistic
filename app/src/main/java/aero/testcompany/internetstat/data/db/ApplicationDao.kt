@@ -8,16 +8,15 @@ import androidx.room.Query
 @Dao
 interface ApplicationDao {
 
-    @Query("SELECT * FROM applicationentity")
-    suspend fun getAll(): List<ApplicationDao>
+    @Query("SELECT * FROM ApplicationEntity")
+    fun getAll(): List<ApplicationEntity>
 
-    @Query("SELECT * FROM applicationentity WHERE name = :name")
-    suspend fun getIdByName(name: String): Long
-
+    @Query("SELECT * FROM ApplicationEntity WHERE name = :name")
+    fun getIdByName(name: String): Long
 
     @Insert
-    suspend fun addApplication(app: ApplicationDao)
+    fun addApplication(app: ApplicationEntity)
 
     @Delete
-    suspend fun deleteApplication(app: ApplicationDao)
+    fun deleteApplication(app: ApplicationEntity)
 }

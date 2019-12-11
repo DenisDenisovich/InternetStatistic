@@ -7,12 +7,12 @@ import androidx.room.Query
 @Dao
 interface NetworkDao {
 
-    @Query("SELECT * FROM networkentity")
-    suspend fun getAll(): List<NetworkDao>
+    @Query("SELECT * FROM NetworkEntity")
+    fun getAll(): List<NetworkEntity>
 
-    @Query("SELECT * FROM networkentity WHERE time >= :start and time < :end")
-    suspend fun getByInterval(start: Long, end: Long)
+    @Query("SELECT * FROM NetworkEntity WHERE time >= :start and time < :end")
+    fun getByInterval(start: Long, end: Long): List<NetworkEntity>
 
     @Insert
-    suspend fun addNetworkEntity(dao: NetworkEntity)
+    fun addNetworkEntity(dao: NetworkEntity)
 }

@@ -1,6 +1,6 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
-import aero.testcompany.internetstat.data.db.NetworkDatabase
+import aero.testcompany.internetstat.data.db.ApplicationEntity
 import aero.testcompany.internetstat.data.db.NetworkEntity
 import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
@@ -53,10 +53,13 @@ class ScannerNetworkMinutes(private val context: Context) {
             while (isActive) {
                 calcWorks.clear()
                 updateCalculatorsList()
+                writeAppsToDb()
                 calculateMinuteNetwork()
                 withContext(Dispatchers.Main) {
                     log()
                 }
+                writeNetworkToDb()
+                logFromDB()
                 delay(1000 * 60)
             }
         }
@@ -71,6 +74,12 @@ class ScannerNetworkMinutes(private val context: Context) {
                 context,
                 networkStartManager
             )
+        }
+    }
+
+    private suspend fun writeAppsToDb() {
+        calculators.forEach { (key, _) ->
+            db.applicationDao().addApplication(ApplicationEntity(0, key))
         }
     }
 
@@ -107,7 +116,28 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
     }
 
-    private fun writeToDb() {
+    private fun writeNetworkToDb() {
+        val fileBody = StringBuilder()
+        val appIdsMap: HashMap<String, Int> = hashMapOf()
+        db.applicationDao().getAll().forEach {
+            appIdsMap[it.name] = it.uid
+        }
+        minuteBytes.forEach { (packageName, stat) ->
+            val lineShort = stat.toStringShort()
+            if (lineShort.isNotEmpty()) {
+                fileBody.append(":${appIdsMap[packageName]}${lineShort}")
+            }
+        }
+        if (fileBody.isNotEmpty()) {
+            val calendar = GregorianCalendar().apply {
+                timeInMillis = System.currentTimeMillis()
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val time = calendar.timeInMillis
+            db.networkDao().addNetworkEntity(NetworkEntity(0, time, fileBody.toString()))
+        }
     }
 
     private fun log() {
@@ -134,5 +164,15 @@ class ScannerNetworkMinutes(private val context: Context) {
             }
         }
         Log.d("LogStatMinutes", "/////////////////////////////////////////////////////////////")
+    }
+
+    private fun logFromDB() {
+        val appIdsMap: HashMap<Int, String> = hashMapOf()
+        db.applicationDao().getAll().forEach {
+            appIdsMap[it.uid] = it.name
+        }
+        db.networkDao().getAll().forEach {
+            Log.d("LogStatMinutesDB", it.data)
+        }
     }
 }
