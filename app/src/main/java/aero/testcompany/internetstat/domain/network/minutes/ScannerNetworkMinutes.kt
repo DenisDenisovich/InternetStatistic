@@ -77,9 +77,15 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
     }
 
-    private suspend fun writeAppsToDb() {
+    private fun writeAppsToDb() {
+        val appsMap: HashMap<String, Int> = hashMapOf()
+        db.applicationDao().getAll().forEach {
+            appsMap[it.name] = it.uid
+        }
         calculators.forEach { (key, _) ->
-            db.applicationDao().addApplication(ApplicationEntity(0, key))
+            if (!appsMap.containsKey(key)) {
+                db.applicationDao().addApplication(ApplicationEntity(0, key))
+            }
         }
     }
 
@@ -173,6 +179,11 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
         db.networkDao().getAll().forEach {
             Log.d("LogStatMinutesDB", it.data)
+        }
+        val aps = db.applicationDao().getAll()
+        Log.d("LogStatMinutesDBApps", "size - ${aps.size}")
+        aps.forEach {
+            Log.d("LogStatMinutesDBApps", "${it.uid} - ${it.name}|")
         }
     }
 }
