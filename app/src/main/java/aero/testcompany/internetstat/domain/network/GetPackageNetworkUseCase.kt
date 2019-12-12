@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.domain.network
 
-import aero.testcompany.internetstat.domain.GetTimeLineUseCase
+import aero.testcompany.internetstat.domain.timeline.GetTimeLine
+import aero.testcompany.internetstat.domain.timeline.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.ApplicationState
 import aero.testcompany.internetstat.models.bucket.BucketBytes
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -27,12 +28,11 @@ open class GetPackageNetworkUseCase(
     protected val context: Context,
     protected val networkStatsManager: NetworkStatsManager
 ) {
-    var timeLine: ArrayList<Long> = arrayListOf()
-        private set
+    protected var timeLine: ArrayList<Long> = arrayListOf()
     protected var workScope: CoroutineScope? = null
-    protected lateinit var getTimeLineUseCase: GetTimeLineUseCase
+    protected lateinit var getTimeLineUseCase: GetTimeLine
     protected var bucketsList: ArrayList<BucketInfo> = arrayListOf()
-    private lateinit var bucketLiveData: MutableLiveData<List<BucketInfo>>
+    protected lateinit var bucketLiveData: MutableLiveData<List<BucketInfo>>
 
     open fun setup(
         interval: Long,
@@ -50,7 +50,7 @@ open class GetPackageNetworkUseCase(
         return bucketLiveData
     }
 
-    fun start() {
+    open fun start() {
         workScope?.launch {
             val buckets: ArrayList<BucketInfo> = arrayListOf()
             bucketsList.clear()
@@ -76,7 +76,7 @@ open class GetPackageNetworkUseCase(
         }
     }
 
-    protected suspend fun calculateBytes(startTime: Long, endTime: Long): BucketInfo? =
+    protected open suspend fun calculateBytes(startTime: Long, endTime: Long): BucketInfo? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             workScope?.run {
                 val mF = async {

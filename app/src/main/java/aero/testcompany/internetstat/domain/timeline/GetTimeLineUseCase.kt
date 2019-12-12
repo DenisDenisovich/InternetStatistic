@@ -1,11 +1,11 @@
-package aero.testcompany.internetstat.domain
+package aero.testcompany.internetstat.domain.timeline
 
 import aero.testcompany.internetstat.models.NetworkPeriod
 import java.util.*
 
-class GetTimeLineUseCase(private val interval: Long, private val period: NetworkPeriod) {
+class GetTimeLineUseCase(private val interval: Long, private val period: NetworkPeriod): GetTimeLine {
 
-    fun getTimeLine(): List<Long> {
+    override fun getTimeLine(): List<Long> {
         val timeLine = arrayListOf<Long>()
         val calendar = Calendar.getInstance()
         var startTime = getStartTime(calendar, interval, period)
