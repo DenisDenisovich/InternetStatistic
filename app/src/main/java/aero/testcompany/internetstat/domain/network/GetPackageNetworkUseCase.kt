@@ -28,7 +28,8 @@ open class GetPackageNetworkUseCase(
     protected val context: Context,
     protected val networkStatsManager: NetworkStatsManager
 ) {
-    protected var timeLine: ArrayList<Long> = arrayListOf()
+    var timeLine: ArrayList<Long> = arrayListOf()
+        protected set
     protected var workScope: CoroutineScope? = null
     protected lateinit var getTimeLineUseCase: GetTimeLine
     protected var bucketsList: ArrayList<BucketInfo> = arrayListOf()

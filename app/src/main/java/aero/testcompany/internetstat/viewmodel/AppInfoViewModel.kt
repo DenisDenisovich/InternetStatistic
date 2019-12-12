@@ -2,6 +2,7 @@ package aero.testcompany.internetstat.viewmodel
 
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
+import aero.testcompany.internetstat.domain.network.minutes.GetPackageNetworkMinutesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkInterval
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -36,7 +37,9 @@ class AppInfoViewModel : ViewModel() {
 
     private lateinit var networkStatsManager: NetworkStatsManager
     private lateinit var getPackageUidUseCase: GetPackageUidUseCase
+    private lateinit var currentPackageNetworkUseCase: GetPackageNetworkUseCase
     private lateinit var packageNetworkUseCase: GetPackageNetworkUseCase
+    private lateinit var packageNetworkMinutesUseCase: GetPackageNetworkMinutesUseCase
     private var networkPeriod: NetworkPeriod = NetworkPeriod.MONTH
 
     fun initData(context: Context, myPackageInfo: MyPackageInfo) {
@@ -48,23 +51,34 @@ class AppInfoViewModel : ViewModel() {
             context,
             networkStatsManager
         )
+        packageNetworkMinutesUseCase = GetPackageNetworkMinutesUseCase(
+            myPackageInfo.packageName,
+            getPackageUidUseCase.getUid(myPackageInfo.packageName),
+            context,
+            networkStatsManager
+        )
     }
 
     fun update(interval: NetworkInterval, period: NetworkPeriod) {
         networkPeriod = period
+        currentPackageNetworkUseCase = if (networkPeriod == NetworkPeriod.MINUTES) {
+            packageNetworkUseCase
+        } else {
+            packageNetworkMinutesUseCase
+        }
         currentNetworkJob = viewModelScope.launch {
             withContext(Dispatchers.Default) {
                 receivedSum = 0
                 transmittedSum = 0
-                buckets = packageNetworkUseCase.setup(
+                buckets = currentPackageNetworkUseCase.setup(
                     interval.getInterval(),
                     period,
                     this@launch + Dispatchers.Default
                 )
-                timeLine.postValue(packageNetworkUseCase.timeLine)
+                timeLine.postValue(currentPackageNetworkUseCase.timeLine)
             }
             buckets?.observeForever(bucketsObserver)
-            packageNetworkUseCase.start()
+            currentPackageNetworkUseCase.start()
         }
     }
 
