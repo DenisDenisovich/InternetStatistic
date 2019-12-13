@@ -55,7 +55,7 @@ class AppInfoFragment : Fragment(),
             tv_transmitted.text = resources.getString(R.string.total_transmitted, it.toMb())
         })
         viewModel.timeLine.observe(this, androidx.lifecycle.Observer {
-            lines.setTimeLine(it)
+            lines.setTimeLine(it, period)
         })
         viewModel.networkInfo.observe(this, androidx.lifecycle.Observer { buckets ->
             if (progress.isVisible()) {

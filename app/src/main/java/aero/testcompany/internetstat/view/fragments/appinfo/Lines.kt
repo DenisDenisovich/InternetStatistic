@@ -2,6 +2,7 @@ package aero.testcompany.internetstat.view.fragments.appinfo
 
 import aero.testcompany.internetstat.models.ApplicationState
 import aero.testcompany.internetstat.models.BytesType
+import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.NetworkSource
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.getNetworkData
@@ -20,12 +21,19 @@ class NetworkLine(
 )
 
 class NetworkLinesList : ArrayList<NetworkLine>() {
-    private val df = SimpleDateFormat("MM.dd", Locale.getDefault())
+    private val dfMonth = SimpleDateFormat("MM.dd", Locale.getDefault())
+    private val dfHour = SimpleDateFormat("HH-MM.dd", Locale.getDefault())
+    private val dfMinutes = SimpleDateFormat("HH:mm", Locale.getDefault())
     val timeLine = arrayListOf<String>()
 
-    fun setTimeLine(longTimeLine: List<Long>) {
+    fun setTimeLine(longTimeLine: List<Long>, period: NetworkPeriod) {
+        val currentFormatter = when(period) {
+            NetworkPeriod.HOUR -> dfHour
+            NetworkPeriod.MINUTES -> dfMinutes
+            else -> dfMonth
+        }
         timeLine.clear()
-        timeLine.addAll(longTimeLine.map { df.format(it) })
+        timeLine.addAll(longTimeLine.map { currentFormatter.format(it) })
     }
 
     fun updateDataSet(
