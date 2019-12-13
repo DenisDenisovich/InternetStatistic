@@ -5,6 +5,9 @@ data class BucketInfo(
     val foreground: BucketSource?,
     val background: BucketSource?
 ) : ShortString {
+
+    constructor(): this(BucketSource(), BucketSource(), BucketSource())
+
     override fun toString(): String =
         if (all.toString().isEmpty() &&
             foreground?.toString().isNullOrEmpty() &&

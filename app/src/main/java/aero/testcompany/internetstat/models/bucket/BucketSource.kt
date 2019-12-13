@@ -1,6 +1,9 @@
 package aero.testcompany.internetstat.models.bucket
 
 data class BucketSource(val mobile: BucketBytes, val wifi: BucketBytes) : ShortString {
+
+    constructor(): this(BucketBytes(), BucketBytes())
+
     override fun toString(): String =
         if (mobile.toString().isEmpty() && wifi.toString().isEmpty()) {
             ""

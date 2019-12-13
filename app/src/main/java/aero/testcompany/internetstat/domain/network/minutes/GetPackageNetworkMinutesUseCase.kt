@@ -73,32 +73,57 @@ class GetPackageNetworkMinutesUseCase(
             bucketsList.clear()
             var startTime: Long
             var endTime: Long
-            var currentIndex = timeLine.lastIndex
-            while (currentIndex > 0) {
-                endTime = timeLine[currentIndex]
-                currentIndex -= 50
-                if (currentIndex < timeLine.size) {
-                    currentIndex = 0
+            var startIndex = timeLine.lastIndex
+            var endIndex = timeLine.lastIndex
+            while (startIndex > 0) {
+                endTime = timeLine[endIndex]
+                startIndex = endIndex - 50
+                if (startIndex < 0) {
+                    startIndex = 0
                 }
-                startTime = timeLine[currentIndex]
-                calculateBytesMinutes(startTime, endTime).let {
+                startTime = timeLine[startIndex]
+                calculateBytesMinutes(
+                    startTime,
+                    endTime,
+                    ArrayList(timeLine.subList(startIndex, endIndex))
+                ).let {
                     buckets.addAll(it)
                 }
                 val newDataPart = ArrayList(buckets)
                 bucketLiveData.postValue(newDataPart)
                 bucketsList.addAll(newDataPart)
                 buckets.clear()
-                currentIndex--
+                endIndex = startIndex - 1
             }
         }
     }
 
-    private fun calculateBytesMinutes(startTime: Long, endTime: Long): ArrayList<BucketInfo> {
-        val networkEntries = db.networkDao().getByInterval(startTime, endTime)
-        return ArrayList(networkEntries.mapNotNull { it.toBucketInfo() })
+    private fun calculateBytesMinutes(
+        startTime: Long,
+        endTime: Long,
+        subTimeLine: ArrayList<Long>
+    ): ArrayList<BucketInfo> {
+        val networkEntries =
+            db.networkDao().getByInterval(startTime, endTime).mapNotNull { it.toBucketInfo() }
+        val buckets = ArrayList(subTimeLine.map { BucketInfo() })
+        if (networkEntries.isEmpty()) {
+            return buckets
+        }
+        var currentIndex = 0
+        for (timeIndex in subTimeLine.indices.reversed()) {
+            if (currentIndex < networkEntries.size &&
+                subTimeLine[timeIndex] == networkEntries[currentIndex].first
+            ) {
+                buckets[timeIndex] = networkEntries[currentIndex].second
+                currentIndex++
+            } else {
+                buckets[timeIndex] = BucketInfo()
+            }
+        }
+        return buckets
     }
 
-    private fun NetworkEntity.toBucketInfo(): BucketInfo? {
+    private fun NetworkEntity.toBucketInfo(): Pair<Long, BucketInfo>? {
         return applicationMap[packageName]?.let { packageId ->
             // find data for packageName
             val packageData = data
@@ -116,7 +141,7 @@ class GetPackageNetworkMinutesUseCase(
                 val (backMob, backWifi) = getMobileWifi(sources[2])
                 val backMobBytes = getBytes(backMob)
                 val backWifiBytes = getBytes(backWifi)
-                BucketInfo(
+                val bucketInfo = BucketInfo(
                     BucketSource(
                         BucketBytes(allMobBytes.first, allMobBytes.second),
                         BucketBytes(allWifiBytes.first, allWifiBytes.second)
@@ -130,6 +155,7 @@ class GetPackageNetworkMinutesUseCase(
                         BucketBytes(backWifiBytes.first, backWifiBytes.second)
                     )
                 )
+                Pair(time, bucketInfo)
             }
         }
     }
@@ -161,8 +187,7 @@ class GetPackageNetworkMinutesUseCase(
     }
 
     /**
-     *Map string {{...}{...}} to Pair(...,...)
-     *
+     * Map string {{...}{...}} to Pair(...,...)
      * */
     private fun getMobileWifi(source: String): Pair<String, String> =
         if (source == "{}") {

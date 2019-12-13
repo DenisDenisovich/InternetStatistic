@@ -10,7 +10,7 @@ interface NetworkDao {
     @Query("SELECT * FROM NetworkEntity")
     fun getAll(): List<NetworkEntity>
 
-    @Query("SELECT * FROM NetworkEntity WHERE time >= :start and time <= :end")
+    @Query("SELECT * FROM NetworkEntity WHERE time >= :start and time <= :end ORDER by time DESC")
     fun getByInterval(start: Long, end: Long): List<NetworkEntity>
 
     @Insert
