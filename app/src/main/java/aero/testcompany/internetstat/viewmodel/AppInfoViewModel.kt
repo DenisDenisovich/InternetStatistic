@@ -62,9 +62,9 @@ class AppInfoViewModel : ViewModel() {
     fun update(interval: NetworkInterval, period: NetworkPeriod) {
         networkPeriod = period
         currentPackageNetworkUseCase = if (networkPeriod == NetworkPeriod.MINUTES) {
-            packageNetworkUseCase
-        } else {
             packageNetworkMinutesUseCase
+        } else {
+            packageNetworkUseCase
         }
         currentNetworkJob = viewModelScope.launch {
             withContext(Dispatchers.Default) {

@@ -119,13 +119,6 @@ class AppInfoFragment : Fragment(),
     }
 
     override fun changePeriodAndInterval(period: NetworkPeriod, interval: NetworkInterval) {
-        if (period == NetworkPeriod.MINUTES) {
-            Toast.makeText(
-                requireContext(),
-                "Minutes doesn't support now", Toast.LENGTH_LONG
-            ).show()
-            return
-        }
         this.period = period
         this.interval = interval
         clearGraphs()

@@ -53,14 +53,12 @@ class ScannerNetworkMinutes(private val context: Context) {
             while (isActive) {
                 calcWorks.clear()
                 updateCalculatorsList()
-                writeAppsToDb()
                 calculateMinuteNetwork()
-                withContext(Dispatchers.Main) {
-                    log()
-                }
+                writeAppsToDb()
                 writeNetworkToDb()
+                log()
                 logFromDB()
-                delay(1000 * 60)
+                delay(1000 * 10)
             }
         }
     }
@@ -74,18 +72,6 @@ class ScannerNetworkMinutes(private val context: Context) {
                 context,
                 networkStartManager
             )
-        }
-    }
-
-    private fun writeAppsToDb() {
-        val appsMap: HashMap<String, Int> = hashMapOf()
-        db.applicationDao().getAll().forEach {
-            appsMap[it.name] = it.uid
-        }
-        calculators.forEach { (key, _) ->
-            if (!appsMap.containsKey(key)) {
-                db.applicationDao().addApplication(ApplicationEntity(0, key))
-            }
         }
     }
 
@@ -122,6 +108,18 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
     }
 
+    private fun writeAppsToDb() {
+        val appsMap: HashMap<String, Int> = hashMapOf()
+        db.applicationDao().getAll().forEach {
+            appsMap[it.name] = it.uid
+        }
+        calculators.forEach { (key, _) ->
+            if (!appsMap.containsKey(key)) {
+                db.applicationDao().addApplication(ApplicationEntity(0, key))
+            }
+        }
+    }
+
     private fun writeNetworkToDb() {
         val fileBody = StringBuilder()
         val appIdsMap: HashMap<String, Int> = hashMapOf()
@@ -147,9 +145,6 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private fun log() {
-        val sdf = SimpleDateFormat("MM_dd_yyyy_HH_mm_ss", Locale.US)
-        val time = sdf.format(Date())
-        val fileBody = StringBuilder()
         minuteBytes.forEach { (packageName, stat) ->
             val line = stat.toString()
             if (line.isNotEmpty()) {
@@ -157,16 +152,6 @@ class ScannerNetworkMinutes(private val context: Context) {
                     "LogStatMinutes",
                     "$packageName - $line"
                 )
-            }
-            val lineShort = stat.toStringShort()
-            if (lineShort.isNotEmpty()) {
-                fileBody.append("${packageName.split(".").lastOrNull()}-${lineShort}")
-            }
-        }
-        if (fileBody.isNotEmpty()) {
-            MyFileWriter(context, time).apply {
-                add(fileBody.toString())
-                close()
             }
         }
         Log.d("LogStatMinutes", "/////////////////////////////////////////////////////////////")
@@ -180,10 +165,11 @@ class ScannerNetworkMinutes(private val context: Context) {
         db.networkDao().getAll().forEach {
             Log.d("LogStatMinutesDB", it.data)
         }
-        val aps = db.applicationDao().getAll()
+        Log.d("LogStatMinutesDB", "/////////////////////////////////////////")
+/*        val aps = db.applicationDao().getAll()
         Log.d("LogStatMinutesDBApps", "size - ${aps.size}")
         aps.forEach {
             Log.d("LogStatMinutesDBApps", "${it.uid} - ${it.name}|")
-        }
+        }*/
     }
 }

@@ -81,7 +81,7 @@ class GetPackageNetworkMinutesUseCase(
                     currentIndex = 0
                 }
                 startTime = timeLine[currentIndex]
-                calculateBytesMinutes(startTime, endTime)?.let {
+                calculateBytesMinutes(startTime, endTime).let {
                     buckets.addAll(it)
                 }
                 val newDataPart = ArrayList(buckets)
@@ -97,8 +97,6 @@ class GetPackageNetworkMinutesUseCase(
         val networkEntries = db.networkDao().getByInterval(startTime, endTime)
         return ArrayList(networkEntries.mapNotNull { it.toBucketInfo() })
     }
-
-    override suspend fun calculateBytes(startTime: Long, endTime: Long): BucketInfo? = null
 
     private fun NetworkEntity.toBucketInfo(): BucketInfo? {
         return applicationMap[packageName]?.let { packageId ->
@@ -154,24 +152,25 @@ class GetPackageNetworkMinutesUseCase(
                 networkData[index - 1] == '}' &&
                 networkData[index + 1] == '{'
             ) {
-                sources.add(networkData.substring(previewSourceIndex, index + 1))
+                sources.add(networkData.substring(previewSourceIndex, index))
                 previewSourceIndex = index + 1
             }
         }
+        sources.add(networkData.substring(previewSourceIndex, networkData.length))
         return sources
     }
 
     /**
-     *Map string {{...},{...}} to Pair(...,...)
+     *Map string {{...}{...}} to Pair(...,...)
      *
      * */
     private fun getMobileWifi(source: String): Pair<String, String> =
         if (source == "{}") {
             Pair("", "")
         } else {
-            val data = source.split("},{")
-            val mob = data[0].substring(2, data[0].lastIndex)
-            val wifi = data[1].substring(1, data[0].lastIndex - 1)
+            val data = source.split("}{")
+            val mob = data[0].substring(2, data[0].length)
+            val wifi = data[1].substring(0, data[1].lastIndex - 1)
             Pair(mob, wifi)
         }
 
