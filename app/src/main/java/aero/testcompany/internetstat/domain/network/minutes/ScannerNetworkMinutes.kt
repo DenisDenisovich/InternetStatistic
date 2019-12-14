@@ -6,12 +6,14 @@ import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.bucket.BucketInfo
+import aero.testcompany.internetstat.util.isStartOfHour
 import aero.testcompany.internetstat.util.minus
 import aero.testcompany.internetstat.view.App
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
+import java.lang.Math.abs
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
@@ -58,7 +60,7 @@ class ScannerNetworkMinutes(private val context: Context) {
                 writeNetworkToDb()
                 log()
                 logFromDB()
-                delay(1000 * 10)
+                delay(1000 * 60)
             }
         }
     }
@@ -76,6 +78,14 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private suspend fun calculateMinuteNetwork() {
+        val isStartOfHour = calculators.entries.first().value.timeLine.getOrNull(0)?.isStartOfHour()
+        if (isStartOfHour == true) {
+            fillBytes(previewBytes)
+            previewBytes.forEach { (key, previewBytes) ->
+                minuteBytes[key] = previewBytes
+            }
+            return
+        }
         // fill preview bytes if empty
         if (previewBytes.isEmpty()) {
             fillBytes(previewBytes)
@@ -135,7 +145,6 @@ class ScannerNetworkMinutes(private val context: Context) {
         if (fileBody.isNotEmpty()) {
             val calendar = GregorianCalendar().apply {
                 timeInMillis = System.currentTimeMillis()
-                set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
@@ -163,7 +172,7 @@ class ScannerNetworkMinutes(private val context: Context) {
             appIdsMap[it.uid] = it.name
         }
         db.networkDao().getAll().forEach {
-            Log.d("LogStatMinutesDB", it.data)
+            Log.d("LogStatMinutesDB", "${it.time} - ${it.data}")
         }
         Log.d("LogStatMinutesDB", "/////////////////////////////////////////")
 /*        val aps = db.applicationDao().getAll()

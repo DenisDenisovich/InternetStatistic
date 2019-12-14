@@ -73,19 +73,17 @@ class GetPackageNetworkMinutesUseCase(
             bucketsList.clear()
             var startTime: Long
             var endTime: Long
-            var startIndex = timeLine.lastIndex
-            var endIndex = timeLine.lastIndex
-            while (startIndex > 0) {
-                endTime = timeLine[endIndex]
-                startIndex = endIndex - 50
-                if (startIndex < 0) {
-                    startIndex = 0
+            var currentIndex = timeLine.lastIndex
+            while (currentIndex > 0) {
+                endTime = timeLine[currentIndex]
+                currentIndex -= 49
+                if (currentIndex < 0) {
+                    currentIndex = 0
                 }
-                startTime = timeLine[startIndex]
+                startTime = timeLine[currentIndex]
                 calculateBytesMinutes(
                     startTime,
-                    endTime,
-                    ArrayList(timeLine.subList(startIndex, endIndex))
+                    endTime
                 ).let {
                     buckets.addAll(it)
                 }
@@ -93,32 +91,38 @@ class GetPackageNetworkMinutesUseCase(
                 bucketLiveData.postValue(newDataPart)
                 bucketsList.addAll(newDataPart)
                 buckets.clear()
-                endIndex = startIndex - 1
+                currentIndex--
             }
         }
     }
 
     private fun calculateBytesMinutes(
         startTime: Long,
-        endTime: Long,
-        subTimeLine: ArrayList<Long>
+        endTime: Long
     ): ArrayList<BucketInfo> {
         val networkEntries =
             db.networkDao().getByInterval(startTime, endTime).mapNotNull { it.toBucketInfo() }
-        val buckets = ArrayList(subTimeLine.map { BucketInfo() })
+        val bucketsSize = (endTime - startTime).toInt() / 60000 + 1
+        val buckets = ArrayList(Array(bucketsSize) { BucketInfo() }.toList())
         if (networkEntries.isEmpty()) {
             return buckets
         }
-        var currentIndex = 0
-        for (timeIndex in subTimeLine.indices.reversed()) {
-            if (currentIndex < networkEntries.size &&
-                subTimeLine[timeIndex] == networkEntries[currentIndex].first
+        val calendar = GregorianCalendar().apply {
+            timeInMillis = endTime
+        }
+        var networkBucketIndex = 0
+        var bucketIndex = 0
+        while (calendar.timeInMillis >= startTime) {
+            if (networkBucketIndex < networkEntries.size &&
+                networkEntries[networkBucketIndex].first == calendar.timeInMillis
             ) {
-                buckets[timeIndex] = networkEntries[currentIndex].second
-                currentIndex++
+                buckets[bucketIndex] = networkEntries[networkBucketIndex].second
+                networkBucketIndex++
             } else {
-                buckets[timeIndex] = BucketInfo()
+                buckets[bucketIndex] = BucketInfo()
             }
+            calendar.add(Calendar.MINUTE, -1)
+            bucketIndex++
         }
         return buckets
     }
