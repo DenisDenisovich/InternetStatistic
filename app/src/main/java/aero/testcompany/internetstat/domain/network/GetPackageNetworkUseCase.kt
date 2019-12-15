@@ -3,9 +3,9 @@ package aero.testcompany.internetstat.domain.network
 import aero.testcompany.internetstat.domain.timeline.GetTimeLine
 import aero.testcompany.internetstat.domain.timeline.GetTimeLineUseCase
 import aero.testcompany.internetstat.models.ApplicationState
-import aero.testcompany.internetstat.models.bucket.BucketBytes
 import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.NetworkSource
+import aero.testcompany.internetstat.models.bucket.BucketBytes
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.models.bucket.BucketSource
 import aero.testcompany.internetstat.util.getFullDate
@@ -64,16 +64,20 @@ open class GetPackageNetworkUseCase(
                     buckets.add(it)
                 }
                 if (buckets.size == 50) {
-                    val newDataPart = ArrayList(buckets)
-                    bucketLiveData.postValue(newDataPart)
-                    bucketsList.addAll(newDataPart)
-                    buckets.clear()
+                    withContext(Dispatchers.Main) {
+                        val newDataPart = ArrayList(buckets)
+                        bucketLiveData.value = newDataPart
+                        bucketsList.addAll(newDataPart)
+                        buckets.clear()
+                    }
                 }
             }
-            val newDataPart = ArrayList(buckets)
-            bucketLiveData.postValue(newDataPart)
-            bucketsList.addAll(newDataPart)
-            buckets.clear()
+            withContext(Dispatchers.Main) {
+                val newDataPart = ArrayList(buckets)
+                bucketLiveData.value = newDataPart
+                bucketsList.addAll(newDataPart)
+                buckets.clear()
+            }
         }
     }
 

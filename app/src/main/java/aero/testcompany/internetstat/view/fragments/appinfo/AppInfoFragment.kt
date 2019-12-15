@@ -15,7 +15,6 @@ import com.github.mikephil.charting.data.LineData
 import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.ViewModelProviders
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
@@ -76,6 +75,16 @@ class AppInfoFragment : Fragment(),
                 initChart(BytesType.RECEIVED)
                 initChart(BytesType.TRANSMITTED)
                 group_chart.visible()
+            }
+            if (period == NetworkPeriod.MINUTES) {
+                buckets.forEach {
+                    val d = it.toStringShort()
+                    if (d.isEmpty()) {
+                        Log.d("LogBack", "empty")
+                    } else {
+                        Log.d("LogBack", d)
+                    }
+                }
             }
             NetworkSource.values().forEach { source ->
                 ApplicationState.values().forEach { state ->

@@ -28,10 +28,10 @@ class AppInfoViewModel : ViewModel() {
             receivedSum += bucket.all.mobile.received + bucket.all.wifi.received
             transmittedSum += bucket.all.mobile.transmitted + bucket.all.wifi.transmitted
         }
-        totalReceived.postValue(receivedSum)
-        totalTransmitted.postValue(transmittedSum)
+        totalReceived.value = receivedSum
+        totalTransmitted.value = transmittedSum
         // send new part of network data
-        networkInfo.postValue(bucketList)
+        networkInfo.value = bucketList
     }
     private var currentNetworkJob: Job? = null
 
@@ -67,16 +67,14 @@ class AppInfoViewModel : ViewModel() {
             packageNetworkUseCase
         }
         currentNetworkJob = viewModelScope.launch {
-            withContext(Dispatchers.Default) {
-                receivedSum = 0
-                transmittedSum = 0
-                buckets = currentPackageNetworkUseCase.setup(
-                    interval.getInterval(),
-                    period,
-                    this@launch + Dispatchers.Default
-                )
-                timeLine.postValue(currentPackageNetworkUseCase.timeLine)
-            }
+            receivedSum = 0
+            transmittedSum = 0
+            buckets = currentPackageNetworkUseCase.setup(
+                interval.getInterval(),
+                period,
+                this@launch + Dispatchers.Default
+            )
+            timeLine.value = currentPackageNetworkUseCase.timeLine
             buckets?.observeForever(bucketsObserver)
             currentPackageNetworkUseCase.start()
         }

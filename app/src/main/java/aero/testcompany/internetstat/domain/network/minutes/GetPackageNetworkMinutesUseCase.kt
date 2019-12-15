@@ -4,7 +4,6 @@ import aero.testcompany.internetstat.data.db.NetworkEntity
 import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.timeline.GetTimeLineMinutesUseCase
-import aero.testcompany.internetstat.models.NetworkInterval
 import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.bucket.BucketBytes
 import aero.testcompany.internetstat.models.bucket.BucketInfo
@@ -13,10 +12,7 @@ import aero.testcompany.internetstat.view.App
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import java.text.DateFormat
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -32,9 +28,9 @@ class GetPackageNetworkMinutesUseCase(
     private var db = App.db
     private var applicationMap: HashMap<String, Int> = hashMapOf()
 
-/*    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
+    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
     private val dfAll = SimpleDateFormat("dd.MM.yyyy HH:mm:sss")
-    lateinit var fileAllWithZeros: MyFileWriter*/
+    lateinit var fileAllWithZeros: MyFileWriter
 
     override fun setup(
         interval: Long,
@@ -81,8 +77,8 @@ class GetPackageNetworkMinutesUseCase(
             var startTime: Long
             var endTime: Long
             var currentIndex = timeLine.lastIndex
-            //val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
-            //fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)
+            val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
+            fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)
             while (currentIndex > 0) {
                 endTime = timeLine[currentIndex]
                 currentIndex -= 49
@@ -90,19 +86,22 @@ class GetPackageNetworkMinutesUseCase(
                     currentIndex = 0
                 }
                 startTime = timeLine[currentIndex]
+                fileAllWithZeros.add("startTime: ${df.format(startTime)}, endTime: ${df.format(endTime)}\n")
                 calculateBytesMinutes(
                     startTime,
                     endTime
                 ).let {
                     buckets.addAll(it)
                 }
-                val newDataPart = ArrayList(buckets)
-                bucketLiveData.postValue(newDataPart)
-                bucketsList.addAll(newDataPart)
-                buckets.clear()
+                withContext(Dispatchers.Main) {
+                    val newDataPart = ArrayList(buckets)
+                    bucketLiveData.value = newDataPart
+                    bucketsList.addAll(newDataPart)
+                    buckets.clear()
+                }
                 currentIndex--
             }
-            //fileAllWithZeros.close()
+            fileAllWithZeros.close()
         }
     }
 
@@ -131,8 +130,8 @@ class GetPackageNetworkMinutesUseCase(
             } else {
                 buckets[bucketIndex] = BucketInfo()
             }
-            /*val t = df.format(calendar.timeInMillis)
-            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")*/
+            val t = df.format(calendar.timeInMillis)
+            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")
             calendar.add(Calendar.MINUTE, -1)
             bucketIndex++
         }
