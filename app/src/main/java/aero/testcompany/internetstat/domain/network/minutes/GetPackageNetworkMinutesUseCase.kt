@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.data.db.NetworkEntity
+import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.timeline.GetTimeLineMinutesUseCase
 import aero.testcompany.internetstat.models.NetworkInterval
@@ -15,6 +16,8 @@ import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -28,6 +31,10 @@ class GetPackageNetworkMinutesUseCase(
 
     private var db = App.db
     private var applicationMap: HashMap<String, Int> = hashMapOf()
+
+/*    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
+    private val dfAll = SimpleDateFormat("dd.MM.yyyy HH:mm:sss")
+    lateinit var fileAllWithZeros: MyFileWriter*/
 
     override fun setup(
         interval: Long,
@@ -74,6 +81,8 @@ class GetPackageNetworkMinutesUseCase(
             var startTime: Long
             var endTime: Long
             var currentIndex = timeLine.lastIndex
+            //val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
+            //fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)
             while (currentIndex > 0) {
                 endTime = timeLine[currentIndex]
                 currentIndex -= 49
@@ -93,6 +102,7 @@ class GetPackageNetworkMinutesUseCase(
                 buckets.clear()
                 currentIndex--
             }
+            //fileAllWithZeros.close()
         }
     }
 
@@ -121,6 +131,8 @@ class GetPackageNetworkMinutesUseCase(
             } else {
                 buckets[bucketIndex] = BucketInfo()
             }
+            /*val t = df.format(calendar.timeInMillis)
+            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")*/
             calendar.add(Calendar.MINUTE, -1)
             bucketIndex++
         }

@@ -78,8 +78,8 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private suspend fun calculateMinuteNetwork() {
-        val isStartOfHour = calculators.entries.first().value.timeLine.getOrNull(0)?.isStartOfHour()
-        if (isStartOfHour == true) {
+        val isStartOfHour = System.currentTimeMillis().isStartOfHour()
+        if (isStartOfHour) {
             fillBytes(previewBytes)
             previewBytes.forEach { (key, previewBytes) ->
                 minuteBytes[key] = previewBytes
