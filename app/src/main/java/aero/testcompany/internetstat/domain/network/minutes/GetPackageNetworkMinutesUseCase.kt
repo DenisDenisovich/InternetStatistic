@@ -28,9 +28,9 @@ class GetPackageNetworkMinutesUseCase(
     private var db = App.db
     private var applicationMap: HashMap<String, Int> = hashMapOf()
 
-    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
+/*    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
     private val dfAll = SimpleDateFormat("dd.MM.yyyy HH:mm:sss")
-    lateinit var fileAllWithZeros: MyFileWriter
+    lateinit var fileAllWithZeros: MyFileWriter*/
 
     override fun setup(
         interval: Long,
@@ -77,8 +77,8 @@ class GetPackageNetworkMinutesUseCase(
             var startTime: Long
             var endTime: Long
             var currentIndex = timeLine.lastIndex
-            val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
-            fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)
+            /*val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
+            fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)*/
             while (currentIndex > 0) {
                 endTime = timeLine[currentIndex]
                 currentIndex -= 49
@@ -86,7 +86,7 @@ class GetPackageNetworkMinutesUseCase(
                     currentIndex = 0
                 }
                 startTime = timeLine[currentIndex]
-                fileAllWithZeros.add("startTime: ${df.format(startTime)}, endTime: ${df.format(endTime)}\n")
+                //fileAllWithZeros.add("startTime: ${df.format(startTime)}, endTime: ${df.format(endTime)}\n")
                 calculateBytesMinutes(
                     startTime,
                     endTime
@@ -101,7 +101,7 @@ class GetPackageNetworkMinutesUseCase(
                 }
                 currentIndex--
             }
-            fileAllWithZeros.close()
+            //fileAllWithZeros.close()
         }
     }
 
@@ -130,8 +130,8 @@ class GetPackageNetworkMinutesUseCase(
             } else {
                 buckets[bucketIndex] = BucketInfo()
             }
-            val t = df.format(calendar.timeInMillis)
-            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")
+            /*val t = df.format(calendar.timeInMillis)
+            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")*/
             calendar.add(Calendar.MINUTE, -1)
             bucketIndex++
         }
