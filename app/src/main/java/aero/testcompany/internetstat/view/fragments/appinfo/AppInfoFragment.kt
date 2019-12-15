@@ -76,16 +76,6 @@ class AppInfoFragment : Fragment(),
                 initChart(BytesType.TRANSMITTED)
                 group_chart.visible()
             }
-            if (period == NetworkPeriod.MINUTES) {
-                buckets.forEach {
-                    val d = it.toStringShort()
-                    if (d.isEmpty()) {
-                        Log.d("LogBack", "empty")
-                    } else {
-                        Log.d("LogBack", d)
-                    }
-                }
-            }
             NetworkSource.values().forEach { source ->
                 ApplicationState.values().forEach { state ->
                     BytesType.values().forEach { type ->
