@@ -81,6 +81,10 @@ open class GetPackageNetworkUseCase(
         }
     }
 
+    fun stop() {
+        workScope?.cancel()
+    }
+
     protected open suspend fun calculateBytes(startTime: Long, endTime: Long): BucketInfo? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             workScope?.run {

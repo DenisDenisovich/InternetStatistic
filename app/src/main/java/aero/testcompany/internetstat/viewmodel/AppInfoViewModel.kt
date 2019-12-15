@@ -37,7 +37,7 @@ class AppInfoViewModel : ViewModel() {
 
     private lateinit var networkStatsManager: NetworkStatsManager
     private lateinit var getPackageUidUseCase: GetPackageUidUseCase
-    private lateinit var currentPackageNetworkUseCase: GetPackageNetworkUseCase
+    private var currentPackageNetworkUseCase: GetPackageNetworkUseCase? = null
     private lateinit var packageNetworkUseCase: GetPackageNetworkUseCase
     private lateinit var packageNetworkMinutesUseCase: GetPackageNetworkMinutesUseCase
     private var networkPeriod: NetworkPeriod = NetworkPeriod.MONTH
@@ -61,22 +61,25 @@ class AppInfoViewModel : ViewModel() {
 
     fun update(interval: NetworkInterval, period: NetworkPeriod) {
         networkPeriod = period
+        currentPackageNetworkUseCase?.stop()
         currentPackageNetworkUseCase = if (networkPeriod == NetworkPeriod.MINUTES) {
             packageNetworkMinutesUseCase
         } else {
             packageNetworkUseCase
         }
-        currentNetworkJob = viewModelScope.launch {
-            receivedSum = 0
-            transmittedSum = 0
-            buckets = currentPackageNetworkUseCase.setup(
-                interval.getInterval(),
-                period,
-                this@launch + Dispatchers.Default
-            )
-            timeLine.value = currentPackageNetworkUseCase.timeLine
-            buckets?.observeForever(bucketsObserver)
-            currentPackageNetworkUseCase.start()
+        currentPackageNetworkUseCase?.let { useCase ->
+            currentNetworkJob = viewModelScope.launch {
+                receivedSum = 0
+                transmittedSum = 0
+                buckets = useCase.setup(
+                    interval.getInterval(),
+                    period,
+                    this@launch + Dispatchers.Default
+                )
+                timeLine.value = useCase.timeLine
+                buckets?.observeForever(bucketsObserver)
+                useCase.start()
+            }
         }
     }
 
