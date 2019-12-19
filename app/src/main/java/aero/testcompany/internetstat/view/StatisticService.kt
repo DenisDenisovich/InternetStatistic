@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.view
 
 import aero.testcompany.internetstat.R
+import aero.testcompany.internetstat.domain.network.SyncNetworkDataWorker
 import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
 import android.app.Service
 import android.content.Intent
@@ -17,6 +18,7 @@ class StatisticService: Service() {
 
     val myBinder = StatisticBinder(this)
     private var minutesScanner: ScannerNetworkMinutes? = null
+    private var syncNetworkDataWorker = SyncNetworkDataWorker()
 
     override fun onCreate() {
         super.onCreate()
