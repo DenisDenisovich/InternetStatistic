@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.domain.network.api
 
 import aero.testcompany.internetstat.data.api.dto.*
+import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -63,12 +64,41 @@ class SyncNetworkDataWorker(val context: Context) {
             minutesLastTime,
             hourLastTime
         )
-        Log.d("OnTikTock", "start")
-        //val lastHour = networkDataCalculator?.getData(NetworkPeriod.HOUR)
+        Log.d("OnTikTockCheck", "start")
+        Log.d("OnTikTockCheck", "hour")
+        val lastHour = networkDataCalculator?.getData(NetworkPeriod.HOUR)
+        Log.d("OnTikTockCheck", "hourSend")
+        lastHour?.let {
+            Log.d("OnTikTockCheck", "hourSend is not null")
+            sendNetworkData(lastHour)
+        }
+        Log.d("OnTikTockCheck", "minutes")
         val lastMinutes = networkDataCalculator?.getData(NetworkPeriod.MINUTES)
-        ""
-        Log.d("OnTikTock", "result")
-        Log.d("OnTikTock", lastMinutes.toString())
+        lastMinutes?.let {
+            Log.d("OnTikTockCheck", "minutesSend is not null")
+            sendNetworkData(lastMinutes)
+        }
+    }
+
+    private suspend fun sendNetworkData(data: ArrayList<NetworkData>) {
+        try {
+            api.addNetworkData(data)
+        } catch (e: Exception) {
+            if (e is HttpException) {
+                val error = gson.fromJson(
+                    e.response()?.errorBody()?.string(),
+                    ErrorResponse::class.java
+                )
+                error
+                Log.e("OnTikTockCheck", error.toString())
+                // TODO send metric there
+            }
+            e.printStackTrace()
+
+            // No network exception
+
+        }
+
     }
 
     private suspend fun getLastTime(period: ApiNetworkPeriod): Long {

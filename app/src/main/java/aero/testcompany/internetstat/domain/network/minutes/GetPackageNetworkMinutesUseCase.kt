@@ -98,13 +98,42 @@ open class GetPackageNetworkMinutesUseCase(
         }
     }
 
+    fun startNow(timeLine: ArrayList<Long>): ArrayList<BucketInfo> {
+        applicationMap.clear()
+        db.applicationDao().getAll().forEach {
+            applicationMap[it.name] = it.uid
+        }
+        this.timeLine = timeLine
+        val buckets: ArrayList<BucketInfo> = arrayListOf()
+        bucketsList.clear()
+        var startTime: Long
+        var endTime: Long
+        var currentIndex = timeLine.lastIndex
+        while (currentIndex > 0) {
+            endTime = timeLine[currentIndex]
+            currentIndex -= 49
+            if (currentIndex < 0) {
+                currentIndex = 0
+            }
+            startTime = timeLine[currentIndex]
+            calculateBytesMinutes(
+                startTime,
+                endTime
+            ).let {
+                buckets.addAll(it)
+            }
+            currentIndex--
+        }
+        return buckets
+    }
+
     fun calculateBytesMinutes(
         startTime: Long,
         endTime: Long
     ): ArrayList<BucketInfo> {
         val networkEntries =
             db.networkDao().getByInterval(startTime, endTime).mapNotNull { it.toBucketInfo() }
-        Log.d("OnTikTock", "networkEntries: $networkEntries")
+        Log.d("OnTikTock", "networkEntries: $networkEntries, start: $startTime, $endTime, $packageName")
         val bucketsSize = (endTime - startTime).toInt() / 60000 + 1
         val buckets = ArrayList(Array(bucketsSize) { BucketInfo() }.toList())
         if (networkEntries.isEmpty()) {
