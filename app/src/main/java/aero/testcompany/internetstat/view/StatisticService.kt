@@ -1,8 +1,9 @@
 package aero.testcompany.internetstat.view
 
 import aero.testcompany.internetstat.R
-import aero.testcompany.internetstat.domain.network.SyncNetworkDataWorker
+import aero.testcompany.internetstat.domain.network.api.SyncNetworkDataWorker
 import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
@@ -18,12 +19,18 @@ class StatisticService: Service() {
 
     val myBinder = StatisticBinder(this)
     private var minutesScanner: ScannerNetworkMinutes? = null
-    private var syncNetworkDataWorker = SyncNetworkDataWorker()
+    @SuppressLint("HardwareIds")
+    private var syncNetworkDataWorker: SyncNetworkDataWorker? = null
 
     override fun onCreate() {
         super.onCreate()
         minutesScanner = ScannerNetworkMinutes(applicationContext)
         minutesScanner?.start()
+        syncNetworkDataWorker =
+            SyncNetworkDataWorker(
+                applicationContext
+            )
+        syncNetworkDataWorker?.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

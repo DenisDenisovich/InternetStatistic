@@ -11,6 +11,7 @@ import aero.testcompany.internetstat.models.bucket.BucketSource
 import aero.testcompany.internetstat.view.App
 import android.app.usage.NetworkStatsManager
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
@@ -18,7 +19,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class GetPackageNetworkMinutesUseCase(
+open class GetPackageNetworkMinutesUseCase(
     val packageName: String,
     packageUid: Int,
     context: Context,
@@ -27,10 +28,6 @@ class GetPackageNetworkMinutesUseCase(
 
     private var db = App.db
     private var applicationMap: HashMap<String, Int> = hashMapOf()
-
-/*    private val df = SimpleDateFormat("dd.MM.yyyy HH:mm")
-    private val dfAll = SimpleDateFormat("dd.MM.yyyy HH:mm:sss")
-    lateinit var fileAllWithZeros: MyFileWriter*/
 
     override fun setup(
         interval: Long,
@@ -77,8 +74,6 @@ class GetPackageNetworkMinutesUseCase(
             var startTime: Long
             var endTime: Long
             var currentIndex = timeLine.lastIndex
-            /*val fileNameWithZeros = "ALL_ZEROS - $packageName: ${dfAll.format(System.currentTimeMillis())}"
-            fileAllWithZeros = MyFileWriter(context, fileNameWithZeros)*/
             while (currentIndex > 0) {
                 endTime = timeLine[currentIndex]
                 currentIndex -= 49
@@ -86,7 +81,6 @@ class GetPackageNetworkMinutesUseCase(
                     currentIndex = 0
                 }
                 startTime = timeLine[currentIndex]
-                //fileAllWithZeros.add("startTime: ${df.format(startTime)}, endTime: ${df.format(endTime)}\n")
                 calculateBytesMinutes(
                     startTime,
                     endTime
@@ -101,16 +95,16 @@ class GetPackageNetworkMinutesUseCase(
                 }
                 currentIndex--
             }
-            //fileAllWithZeros.close()
         }
     }
 
-    private fun calculateBytesMinutes(
+    fun calculateBytesMinutes(
         startTime: Long,
         endTime: Long
     ): ArrayList<BucketInfo> {
         val networkEntries =
             db.networkDao().getByInterval(startTime, endTime).mapNotNull { it.toBucketInfo() }
+        Log.d("OnTikTock", "networkEntries: $networkEntries")
         val bucketsSize = (endTime - startTime).toInt() / 60000 + 1
         val buckets = ArrayList(Array(bucketsSize) { BucketInfo() }.toList())
         if (networkEntries.isEmpty()) {
@@ -130,8 +124,6 @@ class GetPackageNetworkMinutesUseCase(
             } else {
                 buckets[bucketIndex] = BucketInfo()
             }
-            /*val t = df.format(calendar.timeInMillis)
-            fileAllWithZeros.add("$t: ${buckets[bucketIndex].toStringShort()}\n")*/
             calendar.add(Calendar.MINUTE, -1)
             bucketIndex++
         }
