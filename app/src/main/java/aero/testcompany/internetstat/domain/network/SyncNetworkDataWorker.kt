@@ -13,10 +13,10 @@ class SyncNetworkDataWorker {
         }
     }
 
-
     @SuppressLint("HardwareIds")
     suspend fun sendUserId() {
-        val id = Settings.Secure.getString(App.instance.getContentResolver(), Settings.Secure.ANDROID_ID)
-        api.addUser(id)
+        val id = Settings.Secure.getString(App.instance.contentResolver, Settings.Secure.ANDROID_ID)
+        val result = api.addUser(id)
+        result
     }
 }
