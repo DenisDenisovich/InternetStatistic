@@ -2,20 +2,17 @@ package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.data.db.ApplicationEntity
 import aero.testcompany.internetstat.data.db.NetworkEntity
-import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.bucket.BucketInfo
-import aero.testcompany.internetstat.util.isStartOfHour
+import aero.testcompany.internetstat.util.isSameHour
 import aero.testcompany.internetstat.util.minus
 import aero.testcompany.internetstat.view.App
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.*
-import java.lang.Math.abs
 import java.lang.StringBuilder
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -37,6 +34,8 @@ class ScannerNetworkMinutes(private val context: Context) {
     private val nextBytes: HashMap<String, BucketInfo> = HashMap()
 
     private val minuteBytes: HashMap<String, BucketInfo> = HashMap()
+
+    private val previewScanTimes: HashMap<String, Long> = HashMap()
 
     fun start() {
         previewBytes.clear()
@@ -78,14 +77,6 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private suspend fun calculateMinuteNetwork() {
-        val isStartOfHour = System.currentTimeMillis().isStartOfHour()
-        if (isStartOfHour) {
-            fillBytes(previewBytes)
-            previewBytes.forEach { (key, previewBytes) ->
-                minuteBytes[key] = previewBytes
-            }
-            return
-        }
         // fill preview bytes if empty
         if (previewBytes.isEmpty()) {
             fillBytes(previewBytes)
@@ -93,6 +84,14 @@ class ScannerNetworkMinutes(private val context: Context) {
         }
         // fill next bytes
         fillBytes(nextBytes)
+        // check previewTime
+        previewScanTimes.forEach { (key, previewTimestamp) ->
+            val currentTimestamp = calculators[key]?.timeLine?.getOrNull(0) ?: System.currentTimeMillis()
+            if (!currentTimestamp.isSameHour(previewTimestamp)) {
+                Log.d("LogIsSameHour", "$key: $previewTimestamp, $currentTimestamp")
+                previewBytes[key] = BucketInfo()
+            }
+        }
         // calculate minutes network
         minuteBytes.clear()
         nextBytes.forEach { (key, nextBytes) ->
@@ -104,6 +103,11 @@ class ScannerNetworkMinutes(private val context: Context) {
         previewBytes.clear()
         nextBytes.forEach { (key, nextBytes) ->
             previewBytes[key] = nextBytes
+        }
+        // save previewTime
+        previewScanTimes.clear()
+        calculators.forEach { (key, useCase) ->
+            previewScanTimes[key] = useCase.timeLine.getOrNull(0) ?: System.currentTimeMillis()
         }
     }
 

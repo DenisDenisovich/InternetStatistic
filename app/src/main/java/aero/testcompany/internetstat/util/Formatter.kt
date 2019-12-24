@@ -21,3 +21,19 @@ fun Long.isStartOfHour(): Boolean {
     }
     return calend.get(Calendar.MINUTE) == 0
 }
+
+fun Long.isSameHour(anotherTime: Long): Boolean {
+    val firstData = GregorianCalendar().apply {
+        timeInMillis = this@isSameHour
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    val secondData = GregorianCalendar().apply {
+        timeInMillis = anotherTime
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return firstData.timeInMillis == secondData.timeInMillis
+}
