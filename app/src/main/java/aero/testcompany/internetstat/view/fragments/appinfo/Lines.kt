@@ -27,7 +27,7 @@ class NetworkLinesList : ArrayList<NetworkLine>() {
     val timeLine = arrayListOf<String>()
 
     fun setTimeLine(longTimeLine: List<Long>, period: NetworkPeriod) {
-        val currentFormatter = when(period) {
+        val currentFormatter = when (period) {
             NetworkPeriod.HOUR -> dfHour
             NetworkPeriod.MINUTES -> dfMinutes
             else -> dfMonth
@@ -49,7 +49,7 @@ class NetworkLinesList : ArrayList<NetworkLine>() {
                 val lastIndex = timeLine.lastIndex - currentDataSet.values.size
                 networkData.forEachIndexed { index, bytes ->
                     currentDataSet.addEntryOrdered(
-                        Entry((lastIndex - index).toFloat(), bytes.toMb().toFloat())
+                        Entry((lastIndex - index).toFloat(), (bytes.toFloat() / 1024) / 1024)
                     )
                 }
                 currentDataSet.notifyDataSetChanged()
