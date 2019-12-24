@@ -88,7 +88,6 @@ class ScannerNetworkMinutes(private val context: Context) {
         previewScanTimes.forEach { (key, previewTimestamp) ->
             val currentTimestamp = calculators[key]?.timeLine?.getOrNull(0) ?: System.currentTimeMillis()
             if (!currentTimestamp.isSameHour(previewTimestamp)) {
-                Log.d("LogIsSameHour", "$key: $previewTimestamp, $currentTimestamp")
                 previewBytes[key] = BucketInfo()
             }
         }
