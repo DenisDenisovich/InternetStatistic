@@ -13,6 +13,7 @@ import android.app.NotificationChannel
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import android.app.PendingIntent
+import kotlinx.coroutines.*
 
 
 class StatisticService: Service() {
@@ -21,16 +22,21 @@ class StatisticService: Service() {
     private var minutesScanner: ScannerNetworkMinutes? = null
     @SuppressLint("HardwareIds")
     private var syncNetworkDataWorker: SyncNetworkDataWorker? = null
+    private val job = Job()
+
+    private val scope = CoroutineScope(Dispatchers.Default + job)
 
     override fun onCreate() {
         super.onCreate()
         minutesScanner = ScannerNetworkMinutes(applicationContext)
         minutesScanner?.start()
-        syncNetworkDataWorker =
-            SyncNetworkDataWorker(
-                applicationContext
-            )
-        syncNetworkDataWorker?.start()
+        scope.launch {
+            while (true) {
+                syncNetworkDataWorker = SyncNetworkDataWorker(applicationContext)
+                syncNetworkDataWorker?.start()
+                delay(1000 * 60 * 60 * 24)
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

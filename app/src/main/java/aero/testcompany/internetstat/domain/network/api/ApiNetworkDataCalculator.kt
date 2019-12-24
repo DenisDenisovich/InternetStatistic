@@ -33,7 +33,7 @@ class ApiNetworkDataCalculator(
     private val currentLastHour: Long
 
     init {
-        val weakAgoTime = System.currentTimeMillis() - NetworkPeriod.WEEK.getStep()
+        val weakAgoTime = System.currentTimeMillis() - NetworkPeriod.DAY.getStep()
         currentLastMinutes = if (minutesLast < weakAgoTime) {
             weakAgoTime
         } else {
