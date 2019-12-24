@@ -212,6 +212,7 @@ open class GetPackageNetworkUseCase(
                 log(source, bucket)
             }
         }
+        networkStats?.close()
         return BucketBytes(rxBytes, txBytes)
     }
 

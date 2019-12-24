@@ -6,11 +6,13 @@ import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.bucket.BucketInfo
+import aero.testcompany.internetstat.util.isNetworkConnected
 import aero.testcompany.internetstat.view.App
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import android.util.Log
+import com.crashlytics.android.Crashlytics
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import retrofit2.HttpException
@@ -54,29 +56,35 @@ class SyncNetworkDataWorker(val context: Context) {
     }
 
     private suspend fun syncData() {
-        val minutesLastTime = getLastTime(ApiNetworkPeriod.MINUTES)
-        val hourLastTime = getLastTime(ApiNetworkPeriod.HOUR)
-        networkDataCalculator = ApiNetworkDataCalculator(
-            userId,
-            packages,
-            context,
-            scope,
-            minutesLastTime,
-            hourLastTime
-        )
-        Log.d("OnTikTockCheck", "start")
-        Log.d("OnTikTockCheck", "hour")
-        val lastHour = networkDataCalculator?.getData(NetworkPeriod.HOUR)
-        Log.d("OnTikTockCheck", "hourSend")
-        lastHour?.let {
-            Log.d("OnTikTockCheck", "hourSend is not null")
-            sendNetworkData(lastHour)
-        }
-        Log.d("OnTikTockCheck", "minutes")
-        val lastMinutes = networkDataCalculator?.getData(NetworkPeriod.MINUTES)
-        lastMinutes?.let {
-            Log.d("OnTikTockCheck", "minutesSend is not null")
-            sendNetworkData(lastMinutes)
+        try {
+            val minutesLastTime = getLastTime(ApiNetworkPeriod.MINUTES)
+            val hourLastTime = getLastTime(ApiNetworkPeriod.HOUR)
+            networkDataCalculator = ApiNetworkDataCalculator(
+                userId,
+                packages,
+                context,
+                scope,
+                minutesLastTime,
+                hourLastTime
+            )
+            Log.d("OnTikTockCheck", "start")
+            Log.d("OnTikTockCheck", "hour")
+            val lastHour = networkDataCalculator?.getData(NetworkPeriod.HOUR)
+            Log.d("OnTikTockCheck", "hourSend")
+            lastHour?.let {
+                Log.d("OnTikTockCheck", "hourSend is not null")
+                sendNetworkData(lastHour)
+            }
+            Log.d("OnTikTockCheck", "minutes")
+            val lastMinutes = networkDataCalculator?.getData(NetworkPeriod.MINUTES)
+            lastMinutes?.let {
+                Log.d("OnTikTockCheck", "minutesSend is not null")
+                sendNetworkData(lastMinutes)
+            }
+        } catch (t: Throwable) {
+            if (isNetworkConnected(context)) {
+                Crashlytics.logException(t)
+            }
         }
     }
 

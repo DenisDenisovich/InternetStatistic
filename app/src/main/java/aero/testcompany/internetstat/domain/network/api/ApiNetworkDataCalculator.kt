@@ -16,6 +16,7 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
+import java.lang.Exception
 
 class ApiNetworkDataCalculator(
     private val user: String,

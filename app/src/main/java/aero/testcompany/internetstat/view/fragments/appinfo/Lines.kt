@@ -6,7 +6,6 @@ import aero.testcompany.internetstat.models.NetworkPeriod
 import aero.testcompany.internetstat.models.NetworkSource
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.getNetworkData
-import aero.testcompany.internetstat.util.toMb
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineDataSet
 import java.text.SimpleDateFormat
