@@ -3,6 +3,7 @@ package aero.testcompany.internetstat.view
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.domain.network.api.SyncNetworkDataWorker
 import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
+import aero.testcompany.internetstat.util.isNetworkConnected
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
@@ -13,6 +14,7 @@ import android.app.NotificationChannel
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import android.app.PendingIntent
+import android.util.Log
 import kotlinx.coroutines.*
 
 
@@ -30,13 +32,14 @@ class StatisticService: Service() {
         super.onCreate()
         minutesScanner = ScannerNetworkMinutes(applicationContext)
         minutesScanner?.start()
+/*
         scope.launch {
             while (true) {
-                syncNetworkDataWorker = SyncNetworkDataWorker(applicationContext)
-                syncNetworkDataWorker?.start()
+                sendNetworkStats()
                 delay(1000 * 60 * 60 * 24)
             }
         }
+*/
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -55,9 +58,31 @@ class StatisticService: Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        Log.d("LogSend", "onBind")
         return myBinder
     }
 
+    override fun onRebind(intent: Intent?) {
+        Log.d("LogSend", "onRebind")
+        super.onRebind(intent)
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        Log.d("LogSend", "onUnbind")
+        return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    fun sendNetworkStats() {
+        if (isNetworkConnected(applicationContext)) {
+            Log.d("LogSend", "sendNetworkStats")
+            syncNetworkDataWorker = SyncNetworkDataWorker(applicationContext)
+            syncNetworkDataWorker?.start()
+        }
+    }
     class StatisticBinder(val service: StatisticService): Binder()
 
     private fun createNotificationChannel() {
