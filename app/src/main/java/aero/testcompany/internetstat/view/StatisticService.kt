@@ -16,7 +16,6 @@ import android.os.IBinder
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import android.util.Log
-import kotlinx.coroutines.*
 
 
 class StatisticService : Service() {
@@ -27,8 +26,6 @@ class StatisticService : Service() {
     private var minutesScanner: ScannerNetworkMinutes? = null
     @SuppressLint("HardwareIds")
     private var syncNetworkDataWorker: SyncNetworkDataWorker? = null
-    private val job = Job()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
 
     private var mostActiveApplication = MostActiveApp()
     override fun onCreate() {

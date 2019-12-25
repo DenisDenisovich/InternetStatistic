@@ -37,6 +37,14 @@ class SyncNetworkDataWorker(val context: Context) {
         }
     }
 
+    fun startBlocking() {
+        runBlocking {
+            sendUserId()
+            sendPackages()
+            syncData()
+        }
+    }
+
     private suspend fun sendUserId() {
         try {
             val result = api.addUser(userId)

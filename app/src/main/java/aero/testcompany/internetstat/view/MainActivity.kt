@@ -21,6 +21,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentManager
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,12 +51,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         handleInfoScreen(intent)
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        // start one day update scheduler
+        val saveRequest = PeriodicWorkRequestBuilder<UpdateManager>(10, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(this).enqueue(saveRequest)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleInfoScreen(intent)
     }
+
     override fun onResume() {
         super.onResume()
         if (hasPermissionToReadNetworkHistory()) {
