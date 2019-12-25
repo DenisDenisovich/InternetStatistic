@@ -4,6 +4,7 @@ import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.domain.network.api.SyncNetworkDataWorker
 import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
 import aero.testcompany.internetstat.util.isNetworkConnected
+import aero.testcompany.internetstat.util.toMb
 import android.annotation.SuppressLint
 import android.app.*
 import android.content.BroadcastReceiver
@@ -27,25 +28,27 @@ class StatisticService : Service() {
     @SuppressLint("HardwareIds")
     private var syncNetworkDataWorker: SyncNetworkDataWorker? = null
     private val job = Job()
-
     private val scope = CoroutineScope(Dispatchers.Default + job)
 
+    private var mostActiveApplication = MostActiveApp()
     override fun onCreate() {
         super.onCreate()
         val intentFilter = IntentFilter(NOTIFICATION_BROADCAST_ACTION)
         registerReceiver(notificationBroadcast, intentFilter)
 
 
-        minutesScanner = ScannerNetworkMinutes(applicationContext)
-        minutesScanner?.start()
-/*
-        scope.launch {
-            while (true) {
-                sendNetworkStats()
-                delay(1000 * 60 * 60 * 24)
+        minutesScanner = ScannerNetworkMinutes(applicationContext).apply {
+            start()
+            mostActiveApplicationCallback = { packageInfo, bucketInfo ->
+                mostActiveApplication = MostActiveApp(
+                    packageInfo.name,
+                    (bucketInfo.all.mobile.received + bucketInfo.all.wifi.received).toMb(),
+                    (bucketInfo.all.mobile.transmitted + bucketInfo.all.wifi.transmitted).toMb()
+                )
+                startForeground(1, getNotification())
             }
         }
-*/
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -85,22 +88,22 @@ class StatisticService : Service() {
 
     class StatisticBinder(val service: StatisticService) : Binder()
 
-    private fun getNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Foreground Service")
-            .setContentText("Network scanning in progress")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentIntent(createActivityNotificationPending(0))
-            .addAction(
+    private fun getNotification(): Notification =
+        NotificationCompat.Builder(this, CHANNEL_ID).run {
+            setContentTitle(mostActiveApplication.label)
+            setContentText("Received: ${mostActiveApplication.receive}Mb, Transmitted: ${mostActiveApplication.receive}Mb")
+            setSmallIcon(R.mipmap.ic_launcher)
+            setContentIntent(createActivityNotificationPending(0))
+            addAction(
                 R.drawable.ic_settings_black_24dp, "Stop",
                 createNotificationPendind(1, ON_STOP)
             )
-            .addAction(
+            addAction(
                 R.drawable.ic_settings_black_24dp, "Info",
                 createActivityNotificationPending(2, ON_INFO)
             )
-            .build()
-    }
+            build()
+        }
 
     private fun createNotificationPendind(requestCode: Int, extra: String) =
         PendingIntent.getBroadcast(
@@ -137,6 +140,7 @@ class StatisticService : Service() {
         }
     }
 
+
     inner class NotificationBroadcast : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val onStop = intent?.getBooleanExtra(ON_STOP, false) ?: false
@@ -154,4 +158,10 @@ class StatisticService : Service() {
         private const val ON_STOP = "aero.testcompany.internetstat.view.onStop"
         private const val CHANNEL_ID = "statisticChannel"
     }
+
+    class MostActiveApp(
+        val label: String = "Calculation in progress",
+        val receive: String = "0",
+        val transmitted: String = "0"
+    )
 }

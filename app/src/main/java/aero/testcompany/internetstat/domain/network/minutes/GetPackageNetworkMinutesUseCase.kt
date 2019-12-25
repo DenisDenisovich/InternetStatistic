@@ -1,7 +1,6 @@
 package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.data.db.NetworkEntity
-import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.network.GetPackageNetworkUseCase
 import aero.testcompany.internetstat.domain.timeline.GetTimeLineMinutesUseCase
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -14,7 +13,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -28,7 +26,6 @@ open class GetPackageNetworkMinutesUseCase(
 
     private var db = App.db
     private var applicationMap: HashMap<String, Int> = hashMapOf()
-
     override fun setup(
         interval: Long,
         period: NetworkPeriod,

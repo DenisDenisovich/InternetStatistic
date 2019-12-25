@@ -4,6 +4,7 @@ import aero.testcompany.internetstat.data.db.ApplicationEntity
 import aero.testcompany.internetstat.data.db.NetworkEntity
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
+import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.isSameHour
 import aero.testcompany.internetstat.util.minus
@@ -19,15 +20,18 @@ import kotlin.collections.HashMap
 
 class ScannerNetworkMinutes(private val context: Context) {
 
+    var mostActiveApplicationCallback: ((packageInfo: MyPackageInfo, BucketInfo: BucketInfo) -> Unit)? =
+        null
+
     private val db = App.db
 
     private val job = Job()
-
     private val scope = CoroutineScope(Dispatchers.Default + job)
     private val networkStartManager =
         context.getSystemService(Context.NETWORK_STATS_SERVICE) as NetworkStatsManager
     private val calculators: HashMap<String, GetPackageNetworkMinutesUseCase> = HashMap()
-    private val packagesList = GetPackagesUseCase(context.packageManager)
+    private val packagesListUseCase = GetPackagesUseCase(context.packageManager)
+    private var packagesList = ArrayList<MyPackageInfo>()
 
     private val packageUid = GetPackageUidUseCase(context)
     private val previewBytes: HashMap<String, BucketInfo> = HashMap()
@@ -57,6 +61,7 @@ class ScannerNetworkMinutes(private val context: Context) {
                 calculateMinuteNetwork()
                 writeAppsToDb()
                 writeNetworkToDb()
+                updateMostActiveApplication()
                 log()
                 logFromDB()
                 delay(1000 * 60)
@@ -65,8 +70,8 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private fun updateCalculatorsList() {
-        val packages = packagesList.getPackages()
-        packages.forEach {
+        packagesList = ArrayList(packagesListUseCase.getPackages())
+        packagesList.forEach {
             calculators[it.packageName] = GetPackageNetworkMinutesUseCase(
                 it.packageName,
                 packageUid.getUid(it.packageName),
@@ -86,7 +91,8 @@ class ScannerNetworkMinutes(private val context: Context) {
         fillBytes(nextBytes)
         // check previewTime
         previewScanTimes.forEach { (key, previewTimestamp) ->
-            val currentTimestamp = calculators[key]?.timeLine?.getOrNull(0) ?: System.currentTimeMillis()
+            val currentTimestamp =
+                calculators[key]?.timeLine?.getOrNull(0) ?: System.currentTimeMillis()
             if (!currentTimestamp.isSameHour(previewTimestamp)) {
                 previewBytes[key] = BucketInfo()
             }
@@ -153,6 +159,24 @@ class ScannerNetworkMinutes(private val context: Context) {
             }
             val time = calendar.timeInMillis
             db.networkDao().addNetworkEntity(NetworkEntity(0, time, fileBody.toString()))
+        }
+    }
+
+    private fun updateMostActiveApplication() {
+        var mostKey = ""
+        var previewTotal = 0L
+        previewBytes.forEach { (key, bucketInfo) ->
+            val all = bucketInfo.all.mobile.received + bucketInfo.all.mobile.transmitted +
+                    bucketInfo.all.wifi.received + bucketInfo.all.wifi.transmitted
+            if (previewTotal < all) {
+                previewTotal = all
+                mostKey = key
+            }
+        }
+        previewBytes[mostKey]?.let { bucketInfo ->
+            packagesList.find { it.packageName == mostKey }?.let { packageInfo ->
+                mostActiveApplicationCallback?.invoke(packageInfo, bucketInfo)
+            }
         }
     }
 

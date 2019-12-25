@@ -1,11 +1,9 @@
 package aero.testcompany.internetstat.domain.network.api
 
 import aero.testcompany.internetstat.data.api.dto.*
-import aero.testcompany.internetstat.domain.MyFileWriter
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkPeriod
-import aero.testcompany.internetstat.models.bucket.BucketInfo
 import aero.testcompany.internetstat.util.isNetworkConnected
 import aero.testcompany.internetstat.view.App
 import android.annotation.SuppressLint
@@ -106,7 +104,6 @@ class SyncNetworkDataWorker(val context: Context) {
             // No network exception
 
         }
-
     }
 
     private suspend fun getLastTime(period: ApiNetworkPeriod): Long {
