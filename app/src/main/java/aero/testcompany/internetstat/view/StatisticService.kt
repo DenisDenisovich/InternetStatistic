@@ -5,22 +5,24 @@ import aero.testcompany.internetstat.domain.network.api.SyncNetworkDataWorker
 import aero.testcompany.internetstat.domain.network.minutes.ScannerNetworkMinutes
 import aero.testcompany.internetstat.util.isNetworkConnected
 import android.annotation.SuppressLint
-import android.app.Service
+import android.app.*
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
-import android.app.NotificationManager
-import android.app.NotificationChannel
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import android.app.PendingIntent
 import android.util.Log
 import kotlinx.coroutines.*
 
 
-class StatisticService: Service() {
+class StatisticService : Service() {
 
     val myBinder = StatisticBinder(this)
+    var notificationBroadcast = NotificationBroadcast()
+
     private var minutesScanner: ScannerNetworkMinutes? = null
     @SuppressLint("HardwareIds")
     private var syncNetworkDataWorker: SyncNetworkDataWorker? = null
@@ -30,6 +32,10 @@ class StatisticService: Service() {
 
     override fun onCreate() {
         super.onCreate()
+        val intentFilter = IntentFilter(NOTIFICATION_BROADCAST_ACTION)
+        registerReceiver(notificationBroadcast, intentFilter)
+
+
         minutesScanner = ScannerNetworkMinutes(applicationContext)
         minutesScanner?.start()
 /*
@@ -44,26 +50,18 @@ class StatisticService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Foreground Service")
-            .setContentText("Network scanning in progress")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentIntent(pendingIntent)
-            .build()
-        startForeground(1, notification)
         return START_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d("LogSend", "onBind")
+        startForeground(1, getNotification())
         return myBinder
     }
 
     override fun onRebind(intent: Intent?) {
         Log.d("LogSend", "onRebind")
+        startForeground(1, getNotification())
         super.onRebind(intent)
     }
 
@@ -74,6 +72,7 @@ class StatisticService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(notificationBroadcast)
     }
 
     fun sendNetworkStats() {
@@ -83,7 +82,48 @@ class StatisticService: Service() {
             syncNetworkDataWorker?.start()
         }
     }
-    class StatisticBinder(val service: StatisticService): Binder()
+
+    class StatisticBinder(val service: StatisticService) : Binder()
+
+    private fun getNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Foreground Service")
+            .setContentText("Network scanning in progress")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentIntent(createActivityNotificationPending(0))
+            .addAction(
+                R.drawable.ic_settings_black_24dp, "Stop",
+                createNotificationPendind(1, ON_STOP)
+            )
+            .addAction(
+                R.drawable.ic_settings_black_24dp, "Info",
+                createActivityNotificationPending(2, ON_INFO)
+            )
+            .build()
+    }
+
+    private fun createNotificationPendind(requestCode: Int, extra: String) =
+        PendingIntent.getBroadcast(
+            this,
+            requestCode,
+            Intent(NOTIFICATION_BROADCAST_ACTION).apply {
+                putExtra(extra, true)
+            },
+            0
+        )
+
+    private fun createActivityNotificationPending(requestCode: Int, extra: String? = null) =
+        PendingIntent.getActivity(
+            this,
+            requestCode,
+            Intent(this, MainActivity::class.java).apply {
+                extra?.let {
+                    putExtra(it, true)
+                }
+            }
+            ,
+            0
+        )
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -97,7 +137,21 @@ class StatisticService: Service() {
         }
     }
 
+    inner class NotificationBroadcast : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val onStop = intent?.getBooleanExtra(ON_STOP, false) ?: false
+            if (onStop) {
+                stopForeground(true)
+                stopSelf()
+            }
+        }
+    }
+
     companion object {
+        const val ON_INFO = "aero.testcompany.internetstat.view.onInfo"
+        private const val NOTIFICATION_BROADCAST_ACTION =
+            "aero.testcompany.internetstat.view.notificationBroadcastAction"
+        private const val ON_STOP = "aero.testcompany.internetstat.view.onStop"
         private const val CHANNEL_ID = "statisticChannel"
     }
 }

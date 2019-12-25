@@ -3,17 +3,17 @@ package aero.testcompany.internetstat.view.fragments.applist
 import aero.testcompany.internetstat.R
 import aero.testcompany.internetstat.view.MainActivity
 import aero.testcompany.internetstat.util.gone
+import aero.testcompany.internetstat.util.hideKeyboard
+import aero.testcompany.internetstat.util.showKeyboard
 import aero.testcompany.internetstat.util.visible
 import aero.testcompany.internetstat.view.BackPressed
 import aero.testcompany.internetstat.viewmodel.AppListViewModel
-import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -50,10 +50,11 @@ class AppListFragment: Fragment(), BackPressed, SwipeRefreshLayout.OnRefreshList
         }
         viewModel.update()
         btn_search.setOnClickListener {
+            et_search.setText("")
             btn_search.gone()
             et_search.visible()
             tv_title.gone()
-            openKeyboard()
+            et_search.showKeyboard()
             TransitionManager.beginDelayedTransition(toolbar)
         }
         et_search.addTextChangedListener { text: Editable? ->
@@ -77,6 +78,7 @@ class AppListFragment: Fragment(), BackPressed, SwipeRefreshLayout.OnRefreshList
         swiperefresh_list.isRefreshing = false
         if (et_search.visibility == View.VISIBLE) {
             et_search.gone()
+            et_search.hideKeyboard()
             tv_title.visible()
             btn_search.visible()
         }
@@ -84,11 +86,5 @@ class AppListFragment: Fragment(), BackPressed, SwipeRefreshLayout.OnRefreshList
         progress_app.visible()
         rv_app.gone()
         viewModel.update()
-    }
-
-    fun openKeyboard() {
-        et_search.requestFocus()
-        val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-        imm?.showSoftInput(et_search, InputMethodManager.SHOW_IMPLICIT)
     }
 }

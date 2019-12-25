@@ -18,6 +18,7 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentManager
 
@@ -44,11 +45,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val intent = Intent(this, StatisticService::class.java)
-        intent.putExtra("timeStamp", System.currentTimeMillis())
-        startService(intent)
+        handleInfoScreen(intent)
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleInfoScreen(intent)
+    }
     override fun onResume() {
         super.onResume()
         if (hasPermissionToReadNetworkHistory()) {
@@ -59,6 +62,9 @@ class MainActivity : AppCompatActivity() {
             }
             if (hasPermissionToReadPhoneStats()) {
                 Log.d("LogSend", "onResume")
+                val intent = Intent(this, StatisticService::class.java)
+                intent.putExtra("timeStamp", System.currentTimeMillis())
+                startService(intent)
                 Intent(this, StatisticService::class.java).also { intent ->
                     bindService(intent, connection, Context.BIND_AUTO_CREATE)
                 }
@@ -109,6 +115,12 @@ class MainActivity : AppCompatActivity() {
 
     fun updateApiStatistic() {
         mService?.sendNetworkStats()
+    }
+
+    private fun handleInfoScreen(intent: Intent?) {
+        if (intent?.getBooleanExtra(StatisticService.ON_INFO, false) == true) {
+            Toast.makeText(this, "On info tab", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun goBack() {
@@ -188,5 +200,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val READ_PHONE_STATE_REQUEST = 37
+        const val OPEN_INFO_EXTRA = "onInfo"
     }
 }
