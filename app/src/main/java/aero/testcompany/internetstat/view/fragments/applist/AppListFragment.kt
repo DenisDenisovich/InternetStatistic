@@ -18,9 +18,10 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.fragment_application_list.*
 
-class AppListFragment: Fragment(), BackPressed {
+class AppListFragment: Fragment(), BackPressed, SwipeRefreshLayout.OnRefreshListener {
 
     private lateinit var appAdapter: AppListAdapter
     private lateinit var viewModel: AppListViewModel
@@ -36,6 +37,7 @@ class AppListFragment: Fragment(), BackPressed {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        swiperefresh_list.setOnRefreshListener(this)
         viewModel.installedPackages.observe(this, Observer {
             appAdapter.setItems(ArrayList(it))
             progress_app.gone()
@@ -70,6 +72,19 @@ class AppListFragment: Fragment(), BackPressed {
         } else {
             false
         }
+
+    override fun onRefresh() {
+        swiperefresh_list.isRefreshing = false
+        if (et_search.visibility == View.VISIBLE) {
+            et_search.gone()
+            tv_title.visible()
+            btn_search.visible()
+        }
+        (activity as? MainActivity)?.updateApiStatistic()
+        progress_app.visible()
+        rv_app.gone()
+        viewModel.update()
+    }
 
     fun openKeyboard() {
         et_search.requestFocus()

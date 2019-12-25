@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
 import android.util.Log
 import androidx.lifecycle.ViewModelProviders
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlin.collections.ArrayList
@@ -23,7 +24,7 @@ import kotlin.collections.ArrayList
 class AppInfoFragment : Fragment(),
     View.OnClickListener,
     LinesBottomSheetDialog.OnGraphSelected,
-    PeriodBottomSheetDialog.PeriodListener {
+    PeriodBottomSheetDialog.PeriodListener, SwipeRefreshLayout.OnRefreshListener {
 
     private lateinit var myPackageInfo: MyPackageInfo
     private lateinit var viewModel: AppInfoViewModel
@@ -44,6 +45,7 @@ class AppInfoFragment : Fragment(),
     ): View? = inflater.inflate(R.layout.fragment_application_info, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        swiperefresh_info.setOnRefreshListener(this)
         myPackageInfo = arguments?.getParcelable(INFO_KEY) as MyPackageInfo
         viewModel = ViewModelProviders.of(this)[AppInfoViewModel::class.java]
         viewModel.initData(requireContext(), myPackageInfo)
@@ -148,6 +150,11 @@ class AppInfoFragment : Fragment(),
         }
         changeLinesVisibility(bytesType)
         updateGraph()
+    }
+
+    override fun onRefresh() {
+        changePeriodAndInterval(period, interval)
+        swiperefresh_info.isRefreshing = false
     }
 
     private fun initChart(bytesType: BytesType) {
