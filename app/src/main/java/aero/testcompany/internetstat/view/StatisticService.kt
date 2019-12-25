@@ -91,7 +91,7 @@ class StatisticService : Service() {
     private fun getNotification(): Notification =
         NotificationCompat.Builder(this, CHANNEL_ID).run {
             setContentTitle(mostActiveApplication.label)
-            setContentText("Received: ${mostActiveApplication.receive}Mb, Transmitted: ${mostActiveApplication.receive}Mb")
+            setContentText("Received: ${mostActiveApplication.receive}Mb, Transmitted: ${mostActiveApplication.transmitted}Mb")
             setSmallIcon(R.mipmap.ic_launcher)
             setContentIntent(createActivityNotificationPending(0))
             addAction(
