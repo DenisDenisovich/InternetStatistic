@@ -96,7 +96,7 @@ class StatisticService : Service() {
             setContentIntent(createActivityNotificationPending(0))
             addAction(
                 R.drawable.ic_settings_black_24dp, "Stop",
-                createNotificationPendind(1, ON_STOP)
+                createNotificationPending(1, ON_STOP)
             )
             addAction(
                 R.drawable.ic_settings_black_24dp, "Info",
@@ -105,7 +105,7 @@ class StatisticService : Service() {
             build()
         }
 
-    private fun createNotificationPendind(requestCode: Int, extra: String) =
+    private fun createNotificationPending(requestCode: Int, extra: String) =
         PendingIntent.getBroadcast(
             this,
             requestCode,
