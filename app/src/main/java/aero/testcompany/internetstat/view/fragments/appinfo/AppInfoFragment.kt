@@ -24,7 +24,7 @@ import kotlin.collections.ArrayList
 class AppInfoFragment : Fragment(),
     View.OnClickListener,
     LinesBottomSheetDialog.OnGraphSelected,
-    PeriodBottomSheetDialog.PeriodListener, SwipeRefreshLayout.OnRefreshListener {
+    PeriodBottomSheetDialog.PeriodListener {
 
     private lateinit var myPackageInfo: MyPackageInfo
     private lateinit var viewModel: AppInfoViewModel
@@ -45,15 +45,14 @@ class AppInfoFragment : Fragment(),
     ): View? = inflater.inflate(R.layout.fragment_application_info, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        swiperefresh_info.setOnRefreshListener(this)
         myPackageInfo = arguments?.getParcelable(INFO_KEY) as MyPackageInfo
         viewModel = ViewModelProviders.of(this)[AppInfoViewModel::class.java]
         viewModel.initData(requireContext(), myPackageInfo)
         viewModel.totalReceived.observe(this, androidx.lifecycle.Observer {
-            tv_received.text = resources.getString(R.string.total_received, it.toMb())
+            tv_received.text = resources.getString(R.string.total_received_app, it.toMb())
         })
         viewModel.totalTransmitted.observe(this, androidx.lifecycle.Observer {
-            tv_transmitted.text = resources.getString(R.string.total_transmitted, it.toMb())
+            tv_transmitted.text = resources.getString(R.string.total_transmitted_app, it.toMb())
         })
         viewModel.timeLine.observe(this, androidx.lifecycle.Observer {
             lines.setTimeLine(it, period)
@@ -150,11 +149,6 @@ class AppInfoFragment : Fragment(),
         }
         changeLinesVisibility(bytesType)
         updateGraph()
-    }
-
-    override fun onRefresh() {
-        changePeriodAndInterval(period, interval)
-        swiperefresh_info.isRefreshing = false
     }
 
     private fun initChart(bytesType: BytesType) {

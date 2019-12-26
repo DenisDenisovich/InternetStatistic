@@ -1,8 +1,12 @@
 <resources>
     <string name="app_name">InternetStat</string>
     <string name="installed_applications">Installed Applications</string>
-    <string name="total_received">Received %s Mb</string>
-    <string name="total_transmitted">Transmitted %s Mb</string>
+    <string name="info">Info</string>
+    <string name="total_received_app">Received %s Mb</string>
+    <string name="total_transmitted_app">Transmitted %s Mb</string>
+    <string name="total_received">Total received:</string>
+    <string name="total_transmitted">Total transmitted:</string>
+    <string name="top_network_use_apps">Top network use apps</string>
 
     <string-array name="sources">
         <item>All</item>
