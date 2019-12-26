@@ -8,6 +8,7 @@ import aero.testcompany.internetstat.util.isNetworkConnected
 import aero.testcompany.internetstat.view.App
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import com.crashlytics.android.Crashlytics
@@ -46,8 +47,10 @@ class SyncNetworkDataWorker(val context: Context) {
     }
 
     private suspend fun sendUserId() {
+
         try {
-            val result = api.addUser(userId)
+            val info = "${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}"
+            val result = api.addUser(User(userId, info))
         } catch (e: Exception) {
             if (e is HttpException) {
                 val error = gson.fromJson(

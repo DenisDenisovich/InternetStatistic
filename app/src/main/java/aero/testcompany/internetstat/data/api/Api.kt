@@ -9,7 +9,7 @@ import retrofit2.http.Query
 interface Api {
 
     @PUT("/user")
-    suspend fun addUser(@Query("name") username: String): AddUserResponse
+    suspend fun addUser(@Body user: User): AddUserResponse
 
     @PUT("/apps")
     suspend fun addApps(@Body userApps: UserApps): SuccessResponse
