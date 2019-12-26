@@ -207,9 +207,11 @@ open class GetPackageNetworkUseCase(
         networkStats?.let {
             while (networkStats.hasNextBucket()) {
                 networkStats.getNextBucket(bucket)
-                rxBytes += bucket.rxBytes
-                txBytes += bucket.txBytes
-                log(source, bucket)
+                if(bucket.uid == packageUid) {
+                    rxBytes += bucket.rxBytes
+                    txBytes += bucket.txBytes
+                    log(source, bucket)
+                }
             }
         }
         networkStats?.close()
