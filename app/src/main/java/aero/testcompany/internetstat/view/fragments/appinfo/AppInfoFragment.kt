@@ -16,8 +16,9 @@ import androidx.core.content.ContextCompat
 import android.graphics.DashPathEffect
 import android.util.Log
 import androidx.lifecycle.ViewModelProviders
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.formatter.ValueFormatter
 import kotlin.collections.ArrayList
 
@@ -97,6 +98,16 @@ class AppInfoFragment : Fragment(),
         btn_received_lines.setOnClickListener(this)
         btn_transmitted_lines.setOnClickListener(this)
         btn_period.setOnClickListener(this)
+
+
+        chart_received.setOnTouchListener { _, _ ->
+            updateGraphYRange(chart_received, getLineData(BytesType.RECEIVED))
+            return@setOnTouchListener false
+        }
+        chart_transmitted.setOnTouchListener { _, _ ->
+            updateGraphYRange(chart_transmitted, getLineData(BytesType.TRANSMITTED))
+            return@setOnTouchListener false
+        }
     }
 
     override fun onClick(v: View?) {
@@ -158,6 +169,7 @@ class AppInfoFragment : Fragment(),
             setTouchEnabled(true)
             setPinchZoom(true)
             data = getLineData(bytesType)
+            axisRight.labelCount = 6
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 valueFormatter = object : ValueFormatter() {
@@ -278,6 +290,18 @@ class AppInfoFragment : Fragment(),
         chart_received?.apply {
             notifyDataSetChanged()
             invalidate()
+        }
+    }
+
+    private fun updateGraphYRange(graph: LineChart, lineData: LineData) {
+        val lowestX = graph.lowestVisibleX
+        val highestX = graph.highestVisibleX
+        lineData.calcMinMaxY(lowestX, highestX)
+        val minVisibleY = lineData.yMin
+        val maxVisibleY = lineData.yMax
+        val topOffset = maxVisibleY / 6
+        if (maxVisibleY != 0F && minVisibleY >= 0) {
+            graph.setVisibleYRange(minVisibleY, maxVisibleY + topOffset, YAxis.AxisDependency.RIGHT)
         }
     }
 
