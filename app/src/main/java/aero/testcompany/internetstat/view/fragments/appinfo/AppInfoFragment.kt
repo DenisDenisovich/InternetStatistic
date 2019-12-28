@@ -86,6 +86,8 @@ class AppInfoFragment : Fragment(),
                 }
             }
             updateGraph()
+            updateGraphYRange(chart_received, getLineData(BytesType.RECEIVED))
+            updateGraphYRange(chart_transmitted, getLineData(BytesType.TRANSMITTED))
         })
 
         iv_icon.setImageDrawable(
