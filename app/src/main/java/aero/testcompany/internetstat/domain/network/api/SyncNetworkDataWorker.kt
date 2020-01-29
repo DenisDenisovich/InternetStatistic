@@ -1,6 +1,7 @@
 package aero.testcompany.internetstat.domain.network.api
 
 import aero.testcompany.internetstat.data.api.dto.*
+import aero.testcompany.internetstat.domain.malware.MalwareScanner
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
 import aero.testcompany.internetstat.models.NetworkPeriod
@@ -29,8 +30,15 @@ class SyncNetworkDataWorker(val context: Context) {
     private val packagesList = GetPackagesUseCase(context.packageManager)
     private var job: Job = Job()
     private var scope: CoroutineScope = CoroutineScope(Dispatchers.Default + job)
+    private val malwareScaner = MalwareScanner(context)
 
     fun start() {
+        malwareScaner.suspectCallback = { suspectedApps ->
+            suspectedApps.forEach {
+                Log.d("LogFindedApps", it.toString())
+            }
+        }
+        malwareScaner.start()
         scope.launch {
             sendUserId()
             sendPackages()

@@ -54,7 +54,6 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private fun startScanning() {
-        MalwareScanner(context).start()
         scope.launch {
             val calcWorks = ArrayList<Deferred<Pair<Long, Long>>>()
             while (isActive) {
