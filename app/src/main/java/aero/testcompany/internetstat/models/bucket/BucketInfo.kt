@@ -27,4 +27,15 @@ data class BucketInfo(
         } else {
             "{${all.toStringShort()}},{${foreground?.toStringShort()}},{${background?.toStringShort()}}"
         }
+
+    fun getBackgroundTraffic(): Long = (background?.mobile?.received ?: 0) +
+            (background?.mobile?.transmitted ?: 0) +
+            (background?.wifi?.received ?: 0) +
+            (background?.wifi?.transmitted ?: 0)
+
+    fun getForegroundTraffic(): Long = (foreground?.mobile?.received ?: 0) +
+            (foreground?.mobile?.transmitted ?: 0) +
+            (foreground?.wifi?.received ?: 0) +
+            (foreground?.wifi?.transmitted ?: 0)
+
 }

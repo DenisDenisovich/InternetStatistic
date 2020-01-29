@@ -2,6 +2,7 @@ package aero.testcompany.internetstat.domain.network.minutes
 
 import aero.testcompany.internetstat.data.db.ApplicationEntity
 import aero.testcompany.internetstat.data.db.NetworkEntity
+import aero.testcompany.internetstat.domain.malware.MalwareScanner
 import aero.testcompany.internetstat.domain.packageinfo.GetPackageUidUseCase
 import aero.testcompany.internetstat.domain.packageinfo.GetPackagesUseCase
 import aero.testcompany.internetstat.models.MyPackageInfo
@@ -53,6 +54,7 @@ class ScannerNetworkMinutes(private val context: Context) {
     }
 
     private fun startScanning() {
+        MalwareScanner(context).start()
         scope.launch {
             val calcWorks = ArrayList<Deferred<Pair<Long, Long>>>()
             while (isActive) {
